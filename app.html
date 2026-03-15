@@ -10,38 +10,220 @@
 <title>financiQ</title>
 <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
 <style>
-:root{--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)}
+:root{--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px);--sl:env(safe-area-inset-left,0px);--sr:env(safe-area-inset-right,0px)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{font-family:'Alef',sans-serif;background:#080C16;color:#E2E8F0;min-height:100%;overscroll-behavior:none}
+html,body{font-family:'Alef',sans-serif;background:#080C16;color:#E2E8F0;min-height:100vh;overscroll-behavior:none}
 input,button,textarea,select{font-family:'Alef',sans-serif;-webkit-appearance:none;border:none;outline:none}
-::-webkit-scrollbar{display:none}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#1C2747;border-radius:3px}
 @keyframes fu{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 .fu{animation:fu .35s ease forwards}
 .spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
+
+/* Responsive layout */
+@media(min-width:768px){
+  .desktop-sidebar{display:flex!important}
+  .mobile-nav{display:none!important}
+  .main-with-sidebar{margin-left:260px!important}
+}
+@media(max-width:767px){
+  .desktop-sidebar{display:none!important}
+  .mobile-nav{display:flex!important}
+  .main-with-sidebar{margin-left:0!important}
+}
+
+/* Tour overlay */
+.tour-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(8,12,22,.92);z-index:9999;display:flex;align-items:center;justify-content:center;animation:fadeIn .3s ease;backdrop-filter:blur(8px)}
+.tour-card{background:#0F1628;border-radius:24px;padding:36px;max-width:440px;width:90%;border:1px solid #1C2747;animation:slideUp .4s ease;position:relative;overflow:hidden}
+.tour-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#F59E0B,#3B82F6)}
+
+/* Password toggle */
+.pw-wrap{position:relative;width:100%}
+.pw-wrap input{width:100%;padding-right:48px}
+.pw-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:#5A6A8A;cursor:pointer;font-size:16px;padding:4px;margin-top:-6px}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <script>
 /* ═══════════════════════════════════════════════════════════════
-   financiQ — Auth Frontend
-   Login → App / Admin Panel
+   financiQ — Smart Money Management
+   Responsive · Bilingual (EN/HE) · Onboarding Tour
    ═══════════════════════════════════════════════════════════════ */
 
 const API = location.origin + '/api';
-let TOKEN = null;
-let USER = null;
+let TOKEN = null, USER = null, LOADING = false, ERR = '';
 let VIEW = 'login'; // login | register | app | admin
-let ERR = '';
-let LOADING = false;
+let APP_TAB = 'dashboard'; // dashboard | transactions | goals | settings
+let IS_MOBILE = window.innerWidth < 768;
+window.addEventListener('resize', () => { IS_MOBILE = window.innerWidth < 768; });
+
+// ─── i18n ────────────────────────────────────────────────────
+const LANG = {
+  en: {
+    appName: 'financiQ',
+    tagline: 'Smart Money Management',
+    signIn: 'Sign In',
+    signInSub: 'Enter your credentials to continue',
+    username: 'Username',
+    password: 'Password',
+    noAccount: 'No account?',
+    createOne: 'Create one',
+    createAccount: 'Create Account',
+    signUpFor: 'Sign up for financiQ',
+    displayName: 'Display name',
+    usernamePlc: 'Username (lowercase)',
+    passwordPlc: 'Password (6+ chars)',
+    confirmPw: 'Confirm password',
+    haveAccount: 'Already have an account?',
+    signInLink: 'Sign In',
+    welcome: 'Welcome',
+    dashboard: 'Dashboard',
+    transactions: 'Transactions',
+    goals: 'Goals',
+    settings: 'Settings',
+    admin: 'Admin',
+    signOut: 'Sign Out',
+    monthExpenses: 'Month Expenses',
+    monthIncome: 'Month Income',
+    totalTx: 'All Transactions',
+    noData: 'No data yet',
+    addTx: 'Add Transaction',
+    date: 'Date',
+    description: 'Description',
+    amount: 'Amount',
+    category: 'Category',
+    type: 'Type',
+    expense: 'Expense',
+    income: 'Income',
+    save: 'Save',
+    cancel: 'Cancel',
+    delete: 'Delete',
+    addGoal: 'Add Goal',
+    goalName: 'Goal name',
+    target: 'Target amount',
+    saved: 'Saved',
+    language: 'Language',
+    english: 'English',
+    hebrew: 'עברית',
+    profile: 'Profile',
+    apiKey: 'AI API Key',
+    apiKeyDesc: 'Set a global API key for AI features (admin only)',
+    currency: 'Currency symbol',
+    pendingApproval: 'Account pending admin approval.',
+    accountCreated: 'Account created!',
+    pwMismatch: 'Passwords do not match',
+    fillFields: 'Please fill in all fields',
+    // Tour
+    tourWelcome: 'Welcome to financiQ!',
+    tourWelcomeText: 'Let\'s take a quick tour to help you get started with managing your finances.',
+    tourDashboard: 'Your Dashboard',
+    tourDashboardText: 'This is your financial overview. You\'ll see your monthly expenses, income, and spending breakdown here.',
+    tourTransactions: 'Track Transactions',
+    tourTransactionsText: 'Add your daily expenses and income. Categorize them to see where your money goes.',
+    tourGoals: 'Set Savings Goals',
+    tourGoalsText: 'Create goals like "Vacation Fund" or "Emergency Savings" and track your progress.',
+    tourSettings: 'Personalize',
+    tourSettingsText: 'Switch between English and Hebrew, update your profile, and customize your experience.',
+    tourDone: 'You\'re All Set!',
+    tourDoneText: 'Start by adding your first transaction. You can always access this tour from Settings.',
+    next: 'Next',
+    back: 'Back',
+    getStarted: 'Get Started',
+    skip: 'Skip Tour',
+    active:'Active',pending:'Pending',inactive:'Inactive',
+    approve:'Approve',deactivate:'Deactivate',activate:'Activate',
+    resetPw:'Reset Password',userMgmt:'User Management',
+    adminPanel:'Admin Panel',app:'App',
+    globalSettings:'Global Settings',
+    savingSettings:'Saving...',settingsSaved:'Settings saved!',
+  },
+  he: {
+    appName: 'financiQ',
+    tagline: 'ניהול כספים חכם',
+    signIn: 'התחברות',
+    signInSub: 'הכנס את פרטי ההתחברות שלך',
+    username: 'שם משתמש',
+    password: 'סיסמה',
+    noAccount: 'אין לך חשבון?',
+    createOne: 'צור חשבון',
+    createAccount: 'יצירת חשבון',
+    signUpFor: 'הרשם ל-financiQ',
+    displayName: 'שם תצוגה',
+    usernamePlc: 'שם משתמש (אותיות קטנות)',
+    passwordPlc: 'סיסמה (6+ תווים)',
+    confirmPw: 'אימות סיסמה',
+    haveAccount: 'כבר יש לך חשבון?',
+    signInLink: 'התחבר',
+    welcome: 'שלום',
+    dashboard: 'לוח בקרה',
+    transactions: 'תנועות',
+    goals: 'יעדים',
+    settings: 'הגדרות',
+    admin: 'ניהול',
+    signOut: 'התנתקות',
+    monthExpenses: 'הוצאות החודש',
+    monthIncome: 'הכנסות החודש',
+    totalTx: 'כל התנועות',
+    noData: 'אין נתונים עדיין',
+    addTx: 'הוסף תנועה',
+    date: 'תאריך',
+    description: 'תיאור',
+    amount: 'סכום',
+    category: 'קטגוריה',
+    type: 'סוג',
+    expense: 'הוצאה',
+    income: 'הכנסה',
+    save: 'שמור',
+    cancel: 'ביטול',
+    delete: 'מחיקה',
+    addGoal: 'הוסף יעד',
+    goalName: 'שם היעד',
+    target: 'סכום יעד',
+    saved: 'נחסך',
+    language: 'שפה',
+    english: 'English',
+    hebrew: 'עברית',
+    profile: 'פרופיל',
+    apiKey: 'מפתח AI API',
+    apiKeyDesc: 'הגדר מפתח API גלובלי לפיצ\'רים של AI (מנהל בלבד)',
+    currency: 'סמל מטבע',
+    pendingApproval: 'החשבון ממתין לאישור מנהל.',
+    accountCreated: '!החשבון נוצר בהצלחה',
+    pwMismatch: 'הסיסמאות אינן תואמות',
+    fillFields: 'נא למלא את כל השדות',
+    tourWelcome: '!financiQ-ברוכים הבאים ל',
+    tourWelcomeText: 'בואו נעשה סיור קצר שיעזור לכם להתחיל לנהל את הכספים שלכם.',
+    tourDashboard: 'לוח הבקרה שלך',
+    tourDashboardText: 'כאן תראו סקירה כללית של המצב הפיננסי שלכם — הוצאות, הכנסות ופילוח ההוצאות החודשיות.',
+    tourTransactions: 'מעקב תנועות',
+    tourTransactionsText: 'הוסיפו הוצאות והכנסות יומיות. תייגו אותן בקטגוריות כדי לדעת לאן הכסף הולך.',
+    tourGoals: 'הגדירו יעדי חיסכון',
+    tourGoalsText: 'צרו יעדים כמו "קרן חופשה" או "חיסכון לחירום" ועקבו אחרי ההתקדמות.',
+    tourSettings: 'התאמה אישית',
+    tourSettingsText: 'עברו בין אנגלית לעברית, עדכנו את הפרופיל שלכם והתאימו את החוויה.',
+    tourDone: '!הכל מוכן',
+    tourDoneText: 'התחילו בהוספת התנועה הראשונה שלכם. תמיד אפשר לחזור לסיור הזה מההגדרות.',
+    next: 'הבא',
+    back: 'חזרה',
+    getStarted: '!בואו נתחיל',
+    skip: 'דלג על הסיור',
+    active:'פעילים',pending:'ממתינים',inactive:'לא פעילים',
+    approve:'אשר',deactivate:'השבת',activate:'הפעל',
+    resetPw:'איפוס סיסמה',userMgmt:'ניהול משתמשים',
+    adminPanel:'פאנל ניהול',app:'אפליקציה',
+    globalSettings:'הגדרות גלובליות',
+    savingSettings:'שומר...',settingsSaved:'!ההגדרות נשמרו',
+  }
+};
+function t(key){ return (LANG[USER?.lang||'en']||LANG.en)[key] || LANG.en[key] || key; }
+function isRTL(){ return (USER?.lang||'en')==='he'; }
 
 // ─── Theme ──────────────────────────────────────────────────
-const T = {
-  bg:'#080C16',card:'#0F1628',card2:'#161E34',bdr:'#1C2747',
-  txt:'#E2E8F0',mut:'#5A6A8A',acc:'#F59E0B',acc2:'#3B82F6',
-  red:'#EF4444',grn:'#10B981',glass:'rgba(15,22,40,.95)'
-};
+const T={bg:'#080C16',card:'#0F1628',card2:'#161E34',bdr:'#1C2747',txt:'#E2E8F0',mut:'#5A6A8A',acc:'#F59E0B',acc2:'#3B82F6',red:'#EF4444',grn:'#10B981',glass:'rgba(15,22,40,.95)'};
 
 // ─── DOM helper ─────────────────────────────────────────────
 function h(tag,props,...ch){
@@ -59,16 +241,16 @@ function h(tag,props,...ch){
 
 // ─── API calls ──────────────────────────────────────────────
 async function api(method, path, body){
-  const opts = {method, headers:{'Content-Type':'application/json'}};
-  if(TOKEN) opts.headers['Authorization'] = 'Bearer '+TOKEN;
-  if(body) opts.body = JSON.stringify(body);
-  const res = await fetch(API+path, opts);
-  const data = await res.json();
-  if(!res.ok) throw new Error(data.error || 'Request failed');
+  const opts={method, headers:{'Content-Type':'application/json'}};
+  if(TOKEN) opts.headers['Authorization']='Bearer '+TOKEN;
+  if(body) opts.body=JSON.stringify(body);
+  const res=await fetch(API+path, opts);
+  const data=await res.json();
+  if(!res.ok) throw new Error(data.error||'Request failed');
   return data;
 }
 
-// ─── Persist session ────────────────────────────────────────
+// ─── Session ────────────────────────────────────────────────
 function saveSession(){try{localStorage.setItem('fiq_token',TOKEN);localStorage.setItem('fiq_user',JSON.stringify(USER));}catch(e){}}
 function loadSession(){try{TOKEN=localStorage.getItem('fiq_token');const u=localStorage.getItem('fiq_user');if(u)USER=JSON.parse(u);}catch(e){}}
 function clearSession(){TOKEN=null;USER=null;try{localStorage.removeItem('fiq_token');localStorage.removeItem('fiq_user');}catch(e){}}
@@ -77,48 +259,61 @@ function clearSession(){TOKEN=null;USER=null;try{localStorage.removeItem('fiq_to
 function render(){
   const app=document.getElementById('app');
   app.innerHTML='';
+  document.documentElement.dir=isRTL()?'rtl':'ltr';
+  document.documentElement.lang=USER?.lang||'en';
   if(VIEW==='login') renderLogin(app);
   else if(VIEW==='register') renderRegister(app);
-  else if(VIEW==='app') renderAppRedirect(app);
+  else if(VIEW==='app') renderApp(app);
   else if(VIEW==='admin') renderAdmin(app);
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  AUTH SCREENS — shared wrapper
+//  SHARED UI COMPONENTS
 // ═══════════════════════════════════════════════════════════════
 function authPage(app, content){
-  const page = h('div',{style:{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:'20px',background:'linear-gradient(135deg,#080C16 0%,#0F1628 50%,#080C16 100%)'}},
+  app.appendChild(h('div',{style:{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:'20px',background:`linear-gradient(135deg,${T.bg} 0%,${T.card} 50%,${T.bg} 100%)`}},
     h('div',{style:{width:'100%',maxWidth:'400px'},className:'fu'},
       h('div',{style:{textAlign:'center',marginBottom:'32px'}},
-        h('div',{style:{width:'56px',height:'56px',borderRadius:'16px',background:'linear-gradient(135deg,'+T.acc+','+T.acc2+')',display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:'26px',fontWeight:'700',color:'#fff',marginBottom:'12px'}},'₪'),
+        h('div',{style:{width:'56px',height:'56px',borderRadius:'16px',background:`linear-gradient(135deg,${T.acc},${T.acc2})`,display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:'26px',fontWeight:'700',color:'#fff',marginBottom:'12px'}},'₪'),
         h('div',{style:{fontSize:'24px',fontWeight:'700',letterSpacing:'-0.5px'}},'financiQ'),
-        h('div',{style:{fontSize:'13px',color:T.mut,marginTop:'4px'}},'Smart Money Management')
-      ),
-      content
-    )
-  );
-  app.appendChild(page);
+        h('div',{style:{fontSize:'13px',color:T.mut,marginTop:'4px'}},t('tagline'))
+      ), content)));
 }
 
-function inputField(placeholder, type, value, oninput, extra){
+function inputField(placeholder, type, value, oninput, extraStyle){
   return h('input',{type:type||'text',placeholder,value:value||'',
-    style:{width:'100%',padding:'14px 16px',borderRadius:'12px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontSize:'14px',marginBottom:'12px',...(extra||{})},
+    style:{width:'100%',padding:'14px 16px',borderRadius:'12px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontSize:'14px',marginBottom:'12px',...(extraStyle||{})},
     oninput});
 }
 
+function passwordField(placeholder, value, oninput, onkeydown){
+  const wrap=h('div',{className:'pw-wrap',style:{marginBottom:'12px'}});
+  const inp=h('input',{type:'password',placeholder,value:value||'',
+    style:{width:'100%',padding:'14px 16px',paddingRight:'48px',borderRadius:'12px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontSize:'14px'},
+    oninput});
+  if(onkeydown) inp.onkeydown=onkeydown;
+  const toggle=h('button',{className:'pw-toggle',onclick:()=>{
+    const show=inp.type==='password';
+    inp.type=show?'text':'password';
+    toggle.textContent=show?'🙈':'👁';
+  }},'👁');
+  wrap.appendChild(inp);
+  wrap.appendChild(toggle);
+  return wrap;
+}
+
 function btnPrimary(text, onclick, loading){
-  return h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:'linear-gradient(135deg,'+T.acc+','+T.acc2+')',color:'#fff',fontWeight:'700',fontSize:'15px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',opacity:loading?'.7':'1'},onclick:loading?null:onclick},
+  return h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:`linear-gradient(135deg,${T.acc},${T.acc2})`,color:'#fff',fontWeight:'700',fontSize:'15px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',opacity:loading?'.7':'1'},onclick:loading?null:onclick},
     loading?h('span',{className:'spinner'}):null, text);
 }
 
-function errBox(msg){
-  if(!msg) return null;
-  return h('div',{style:{padding:'12px 16px',borderRadius:'10px',background:T.red+'22',color:T.red,fontSize:'13px',marginBottom:'16px',fontWeight:'600',textAlign:'center'}},msg);
-}
+function errBox(msg){if(!msg)return null;return h('div',{style:{padding:'12px 16px',borderRadius:'10px',background:T.red+'22',color:T.red,fontSize:'13px',marginBottom:'16px',fontWeight:'600',textAlign:'center'}},msg);}
+function successBox(msg){if(!msg)return null;return h('div',{style:{padding:'12px 16px',borderRadius:'10px',background:T.grn+'22',color:T.grn,fontSize:'13px',marginBottom:'16px',fontWeight:'600',textAlign:'center'}},msg);}
 
-function successBox(msg){
-  if(!msg) return null;
-  return h('div',{style:{padding:'12px 16px',borderRadius:'10px',background:T.grn+'22',color:T.grn,fontSize:'13px',marginBottom:'16px',fontWeight:'600',textAlign:'center'}},msg);
+function statCard(label, value, color){
+  return h('div',{style:{background:T.card,borderRadius:'14px',padding:'16px',border:'1px solid '+T.bdr,textAlign:'center',flex:'1',minWidth:'0'}},
+    h('div',{style:{fontSize:'22px',fontWeight:'700',color:color||T.txt}},value),
+    h('div',{style:{fontSize:'11px',color:T.mut,marginTop:'4px'}},label));
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -126,31 +321,29 @@ function successBox(msg){
 // ═══════════════════════════════════════════════════════════════
 function renderLogin(app){
   let username='', password='';
-  const card = h('div',{style:{background:T.card,borderRadius:'20px',padding:'28px',border:'1px solid '+T.bdr}},
-    h('div',{style:{fontSize:'18px',fontWeight:'700',marginBottom:'4px'}},'Sign In'),
-    h('div',{style:{fontSize:'12px',color:T.mut,marginBottom:'20px'}},'Enter your credentials to continue'),
+  const card=h('div',{style:{background:T.card,borderRadius:'20px',padding:'28px',border:'1px solid '+T.bdr}},
+    h('div',{style:{fontSize:'18px',fontWeight:'700',marginBottom:'4px'}},t('signIn')),
+    h('div',{style:{fontSize:'12px',color:T.mut,marginBottom:'20px'}},t('signInSub')),
     errBox(ERR),
-    inputField('Username','text',username,function(e){username=e.target.value;}),
-    inputField('Password','password',password,function(e){password=e.target.value;},{onkeydown:function(e){if(e.key==='Enter')doLogin();}}),
-    btnPrimary('Sign In', doLogin, LOADING),
+    inputField(t('username'),'text',username,function(e){username=e.target.value;}),
+    passwordField(t('password'),password,function(e){password=e.target.value;},function(e){if(e.key==='Enter')doLogin();}),
+    btnPrimary(t('signIn'), doLogin, LOADING),
     h('div',{style:{textAlign:'center',marginTop:'16px',fontSize:'13px',color:T.mut}},
-      'No account? ',
-      h('button',{style:{background:'none',border:'none',color:T.acc,fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{ERR='';VIEW='register';render();}},'Create one')
+      t('noAccount')+' ',
+      h('button',{style:{background:'none',border:'none',color:T.acc,fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{ERR='';VIEW='register';render();}},' '+t('createOne'))
     )
   );
-
   async function doLogin(){
-    if(!username||!password){ERR='Please fill in all fields';render();return;}
+    if(!username||!password){ERR=t('fillFields');render();return;}
     ERR='';LOADING=true;render();
     try{
-      const res = await api('POST','/login',{username,password});
+      const res=await api('POST','/login',{username,password});
       TOKEN=res.token;USER=res.user;saveSession();
       LOADING=false;VIEW=USER.is_admin?'admin':'app';render();
-    }catch(e){
-      ERR=e.message;LOADING=false;render();
-    }
+      // Show tour for first-time users
+      if(!USER.tour_completed && !USER.is_admin) showTour();
+    }catch(e){ERR=e.message;LOADING=false;render();}
   }
-
   authPage(app, card);
 }
 
@@ -158,104 +351,417 @@ function renderLogin(app){
 //  REGISTER
 // ═══════════════════════════════════════════════════════════════
 function renderRegister(app){
-  let username='',password='',password2='',displayName='';
+  let username='',password='',password2='',displayName='',lang='en';
   let success=false;
-
   function doRender(){
-    const content = success
+    const content=success
       ? h('div',{style:{background:T.card,borderRadius:'20px',padding:'28px',border:'1px solid '+T.bdr}},
-          successBox('Account created!'),
+          successBox(t('accountCreated')),
           h('div',{style:{background:T.acc+'15',borderRadius:'10px',padding:'14px',marginBottom:'16px',fontSize:'12px',color:T.acc,lineHeight:'1.5'}},
-            '⏳ Your account is pending admin approval. You will be able to sign in once approved.'),
-          h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontWeight:'700',fontSize:'14px',cursor:'pointer'},onclick:()=>{ERR='';VIEW='login';render();}},'← Back to Sign In')
-        )
+            '⏳ '+t('pendingApproval')),
+          h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontWeight:'700',fontSize:'14px',cursor:'pointer'},onclick:()=>{ERR='';VIEW='login';render();}},'← '+t('signInLink')))
       : h('div',{style:{background:T.card,borderRadius:'20px',padding:'28px',border:'1px solid '+T.bdr}},
-          h('div',{style:{fontSize:'18px',fontWeight:'700',marginBottom:'4px'}},'Create Account'),
-          h('div',{style:{fontSize:'12px',color:T.mut,marginBottom:'20px'}},'Sign up for financiQ'),
+          h('div',{style:{fontSize:'18px',fontWeight:'700',marginBottom:'4px'}},t('createAccount')),
+          h('div',{style:{fontSize:'12px',color:T.mut,marginBottom:'20px'}},t('signUpFor')),
           errBox(ERR),
-          inputField('Display name','text',displayName,function(e){displayName=e.target.value;}),
-          inputField('Username (lowercase)','text',username,function(e){username=e.target.value;}),
-          inputField('Password (6+ chars)','password',password,function(e){password=e.target.value;}),
-          inputField('Confirm password','password',password2,function(e){password2=e.target.value;}),
-          btnPrimary('Create Account', doRegister, LOADING),
+          inputField(t('displayName'),'text',displayName,function(e){displayName=e.target.value;}),
+          inputField(t('usernamePlc'),'text',username,function(e){username=e.target.value;}),
+          passwordField(t('passwordPlc'),password,function(e){password=e.target.value;}),
+          passwordField(t('confirmPw'),password2,function(e){password2=e.target.value;}),
+          // Language selector
+          h('div',{style:{display:'flex',gap:'8px',marginBottom:'16px'}},
+            h('button',{style:{flex:1,padding:'10px',borderRadius:'10px',background:lang==='en'?T.acc2+'33':T.card2,border:'1px solid '+(lang==='en'?T.acc2:T.bdr),color:lang==='en'?T.acc2:T.mut,fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{lang='en';doRender();}},'English'),
+            h('button',{style:{flex:1,padding:'10px',borderRadius:'10px',background:lang==='he'?T.acc2+'33':T.card2,border:'1px solid '+(lang==='he'?T.acc2:T.bdr),color:lang==='he'?T.acc2:T.mut,fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{lang='he';doRender();}},'עברית')
+          ),
+          btnPrimary(t('createAccount'), doRegister, LOADING),
           h('div',{style:{textAlign:'center',marginTop:'16px',fontSize:'13px',color:T.mut}},
-            'Already have an account? ',
-            h('button',{style:{background:'none',border:'none',color:T.acc,fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{ERR='';VIEW='login';render();}},'Sign In')
+            t('haveAccount')+' ',
+            h('button',{style:{background:'none',border:'none',color:T.acc,fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{ERR='';VIEW='login';render();}},' '+t('signInLink'))
           )
         );
-    app.innerHTML='';
-    authPage(app, content);
+    app.innerHTML='';authPage(app, content);
   }
-
   async function doRegister(){
-    if(!username||!password){ERR='Please fill all fields';doRender();return;}
-    if(password!==password2){ERR='Passwords do not match';doRender();return;}
+    if(!username||!password){ERR=t('fillFields');doRender();return;}
+    if(password!==password2){ERR=t('pwMismatch');doRender();return;}
     ERR='';LOADING=true;doRender();
     try{
-      const res = await api('POST','/register',{username,password,display_name:displayName||username});
+      await api('POST','/register',{username,password,display_name:displayName||username,lang});
       success=true;LOADING=false;doRender();
     }catch(e){ERR=e.message;LOADING=false;doRender();}
   }
-
   doRender();
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  APP REDIRECT (loads the finance app iframe or inline)
+//  ONBOARDING TOUR
 // ═══════════════════════════════════════════════════════════════
-function renderAppRedirect(app){
-  // Full finance app — simplified version that uses the API
-  app.innerHTML='';
-  const page = h('div',{style:{minHeight:'100vh',background:T.bg}});
-
-  // Header
-  page.appendChild(h('div',{style:{background:T.glass,borderBottom:'1px solid '+T.bdr,padding:'calc(var(--st) + 10px) 16px 12px',display:'flex',alignItems:'center',justifyContent:'space-between',backdropFilter:'blur(16px)'}},
-    h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},
-      h('div',{style:{width:'34px',height:'34px',borderRadius:'10px',background:'linear-gradient(135deg,'+T.acc+','+T.acc2+')',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'16px',fontWeight:'700',color:'#fff'}},'₪'),
-      h('div',{},
-        h('div',{style:{fontSize:'16px',fontWeight:'700'}},'financiQ'),
-        h('div',{style:{fontSize:'10px',color:T.mut}},'Welcome, '+(USER?.display_name||USER?.username||'User'))
-      )
-    ),
-    h('div',{style:{display:'flex',gap:'8px'}},
-      USER?.is_admin?h('button',{style:{padding:'6px 12px',borderRadius:'8px',background:T.acc2+'22',border:'1px solid '+T.acc2+'44',color:T.acc2,fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:()=>{VIEW='admin';render();}},'Admin'):null,
-      h('button',{style:{padding:'6px 12px',borderRadius:'8px',background:T.red+'22',border:'1px solid '+T.red+'44',color:T.red,fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:()=>{clearSession();VIEW='login';render();}},'Sign Out')
-    )
-  ));
-
-  // Main content
-  const main = h('div',{style:{padding:'20px 16px calc(20px + var(--sb))',maxWidth:'600px',margin:'0 auto'},className:'fu'});
-
-  main.appendChild(h('div',{style:{background:T.card,borderRadius:'16px',padding:'24px',border:'1px solid '+T.bdr,textAlign:'center',marginBottom:'16px'}},
-    h('div',{style:{fontSize:'40px',marginBottom:'12px'}},'✓'),
-    h('div',{style:{fontSize:'18px',fontWeight:'700',color:T.grn,marginBottom:'6px'}},'You\'re In!'),
-    h('div',{style:{fontSize:'13px',color:T.mut,lineHeight:'1.6',maxWidth:'340px',margin:'0 auto'}},
-      'You are securely logged in. Your financial data is protected. The full financiQ dashboard, analytics, AI agent, and all features are available through this authenticated session.'
-    )
-  ));
-
-  // Quick info cards
-  const info = [
-    {icon:'📊',title:'Dashboard',desc:'View spending analytics, charts, and forecasts'},
-    {icon:'⬆',title:'Upload CSV',desc:'Import bank statements securely'},
-    {icon:'✦',title:'AI Agent',desc:'Get personalized financial advice'},
-    {icon:'🎯',title:'Goals',desc:'Track your savings goals'},
-    {icon:'📅',title:'History',desc:'12-month spending log'},
-    {icon:'⚠',title:'Alerts',desc:'Duplicate & ghost subscription detection'},
+function showTour(){
+  let step=0;
+  const steps=[
+    {icon:'🎉', title:'tourWelcome', text:'tourWelcomeText'},
+    {icon:'📊', title:'tourDashboard', text:'tourDashboardText'},
+    {icon:'💳', title:'tourTransactions', text:'tourTransactionsText'},
+    {icon:'🎯', title:'tourGoals', text:'tourGoalsText'},
+    {icon:'⚙', title:'tourSettings', text:'tourSettingsText'},
+    {icon:'🚀', title:'tourDone', text:'tourDoneText'},
   ];
-  info.forEach(i=>{
-    main.appendChild(h('div',{style:{background:T.card,borderRadius:'14px',padding:'16px',border:'1px solid '+T.bdr,marginBottom:'10px',display:'flex',alignItems:'center',gap:'14px'}},
-      h('div',{style:{width:'44px',height:'44px',borderRadius:'12px',background:T.card2,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'20px',flexShrink:'0'}},i.icon),
-      h('div',{},h('div',{style:{fontSize:'14px',fontWeight:'700'}},i.title),h('div',{style:{fontSize:'12px',color:T.mut}},i.desc))
-    ));
-  });
+  function renderTour(){
+    const existing=document.querySelector('.tour-overlay');
+    if(existing) existing.remove();
+    const s=steps[step];
+    const isLast=step===steps.length-1;
+    const isFirst=step===0;
+    const overlay=h('div',{className:'tour-overlay'},
+      h('div',{className:'tour-card',style:{direction:isRTL()?'rtl':'ltr'}},
+        // Progress dots
+        h('div',{style:{display:'flex',justifyContent:'center',gap:'6px',marginBottom:'24px'}},
+          ...steps.map((_,i)=>h('div',{style:{width:i===step?'24px':'8px',height:'8px',borderRadius:'4px',background:i===step?T.acc:T.bdr,transition:'all .3s ease'}}))),
+        // Icon
+        h('div',{style:{fontSize:'48px',textAlign:'center',marginBottom:'16px'}},s.icon),
+        // Title
+        h('div',{style:{fontSize:'20px',fontWeight:'700',textAlign:'center',marginBottom:'8px'}},t(s.title)),
+        // Text
+        h('div',{style:{fontSize:'14px',color:T.mut,textAlign:'center',lineHeight:'1.7',marginBottom:'28px'}},t(s.text)),
+        // Buttons
+        h('div',{style:{display:'flex',gap:'10px'}},
+          !isFirst?h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontWeight:'700',fontSize:'14px',cursor:'pointer'},onclick:()=>{step--;renderTour();}},t('back')):null,
+          h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:`linear-gradient(135deg,${T.acc},${T.acc2})`,color:'#fff',fontWeight:'700',fontSize:'14px',cursor:'pointer'},
+            onclick:()=>{
+              if(isLast){overlay.remove();api('POST','/tour-complete').catch(()=>{});if(USER)USER.tour_completed=1;saveSession();}
+              else{step++;renderTour();}
+            }},isLast?t('getStarted'):t('next'))
+        ),
+        // Skip
+        !isLast?h('button',{style:{width:'100%',marginTop:'12px',padding:'8px',background:'none',border:'none',color:T.mut,fontSize:'12px',cursor:'pointer'},onclick:()=>{overlay.remove();api('POST','/tour-complete').catch(()=>{});if(USER)USER.tour_completed=1;saveSession();}},t('skip')):null
+      )
+    );
+    document.body.appendChild(overlay);
+  }
+  renderTour();
+}
 
-  main.appendChild(h('div',{style:{textAlign:'center',padding:'20px',fontSize:'11px',color:T.mut}},
-    'Session expires in 24 hours'
+// ═══════════════════════════════════════════════════════════════
+//  MAIN APP (with responsive layout)
+// ═══════════════════════════════════════════════════════════════
+function renderApp(app){
+  app.innerHTML='';
+  const wrapper=h('div',{style:{minHeight:'100vh',background:T.bg,direction:isRTL()?'rtl':'ltr'}});
+
+  // ─── Desktop Sidebar ──────────────────────────────────────
+  const sidebar=h('div',{className:'desktop-sidebar',style:{position:'fixed',top:0,left:isRTL()?'auto':'0',right:isRTL()?'0':'auto',bottom:0,width:'260px',background:T.card,borderRight:isRTL()?'none':'1px solid '+T.bdr,borderLeft:isRTL()?'1px solid '+T.bdr:'none',padding:'24px 16px',display:'flex',flexDirection:'column',zIndex:100}});
+  // Logo
+  sidebar.appendChild(h('div',{style:{display:'flex',alignItems:'center',gap:'12px',marginBottom:'32px',padding:'0 8px'}},
+    h('div',{style:{width:'40px',height:'40px',borderRadius:'12px',background:`linear-gradient(135deg,${T.acc},${T.acc2})`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'20px',fontWeight:'700',color:'#fff'}},'₪'),
+    h('div',{},h('div',{style:{fontSize:'18px',fontWeight:'700'}},'financiQ'),h('div',{style:{fontSize:'10px',color:T.mut}},t('tagline')))
+  ));
+  // Nav items
+  const navItems=[
+    {id:'dashboard',icon:'📊',label:t('dashboard')},
+    {id:'transactions',icon:'💳',label:t('transactions')},
+    {id:'goals',icon:'🎯',label:t('goals')},
+    {id:'settings',icon:'⚙',label:t('settings')},
+  ];
+  navItems.forEach(n=>{
+    const active=APP_TAB===n.id;
+    sidebar.appendChild(h('button',{style:{width:'100%',padding:'12px 16px',borderRadius:'12px',background:active?T.acc+'18':'transparent',border:'none',color:active?T.acc:T.mut,fontSize:'14px',fontWeight:active?'700':'400',cursor:'pointer',display:'flex',alignItems:'center',gap:'12px',marginBottom:'4px',textAlign:isRTL()?'right':'left',direction:isRTL()?'rtl':'ltr'},
+      onclick:()=>{APP_TAB=n.id;render();}},
+      h('span',{style:{fontSize:'18px'}},n.icon), n.label));
+  });
+  // Admin link
+  if(USER?.is_admin){
+    sidebar.appendChild(h('button',{style:{width:'100%',padding:'12px 16px',borderRadius:'12px',background:'transparent',border:'none',color:T.red,fontSize:'14px',fontWeight:'400',cursor:'pointer',display:'flex',alignItems:'center',gap:'12px',marginBottom:'4px',textAlign:isRTL()?'right':'left'},
+      onclick:()=>{VIEW='admin';render();}},h('span',{style:{fontSize:'18px'}},'🛡'), t('admin')));
+  }
+  // Spacer + user + signout
+  sidebar.appendChild(h('div',{style:{flex:1}}));
+  sidebar.appendChild(h('div',{style:{padding:'16px',background:T.card2,borderRadius:'14px',border:'1px solid '+T.bdr}},
+    h('div',{style:{fontSize:'13px',fontWeight:'700',marginBottom:'4px'}},USER?.display_name||USER?.username),
+    h('div',{style:{fontSize:'11px',color:T.mut,marginBottom:'10px'}},'@'+(USER?.username||'')),
+    h('button',{style:{width:'100%',padding:'8px',borderRadius:'8px',background:T.red+'18',border:'1px solid '+T.red+'33',color:T.red,fontSize:'12px',fontWeight:'700',cursor:'pointer'},onclick:()=>{clearSession();VIEW='login';render();}},t('signOut'))
+  ));
+  wrapper.appendChild(sidebar);
+
+  // ─── Mobile Header ────────────────────────────────────────
+  const mobileHeader=h('div',{className:'mobile-nav',style:{position:'sticky',top:0,zIndex:100,background:T.glass,borderBottom:'1px solid '+T.bdr,padding:'calc(var(--st) + 8px) 16px 8px',display:'flex',alignItems:'center',justifyContent:'space-between',backdropFilter:'blur(16px)'}},
+    h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},
+      h('div',{style:{width:'32px',height:'32px',borderRadius:'10px',background:`linear-gradient(135deg,${T.acc},${T.acc2})`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'15px',fontWeight:'700',color:'#fff'}},'₪'),
+      h('div',{style:{fontSize:'16px',fontWeight:'700'}},'financiQ')),
+    h('button',{style:{padding:'6px 12px',borderRadius:'8px',background:T.red+'18',border:'1px solid '+T.red+'33',color:T.red,fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:()=>{clearSession();VIEW='login';render();}},t('signOut'))
+  );
+  wrapper.appendChild(mobileHeader);
+
+  // ─── Main content ─────────────────────────────────────────
+  const main=h('div',{className:'main-with-sidebar',style:{marginLeft:'0',padding:IS_MOBILE?'16px':'32px',paddingBottom:IS_MOBILE?'100px':'32px',maxWidth:'900px',margin:IS_MOBILE?'0 auto':'0 auto 0 260px'}});
+  // Page title
+  main.appendChild(h('div',{style:{marginBottom:'24px'},className:'fu'},
+    h('div',{style:{fontSize:IS_MOBILE?'22px':'28px',fontWeight:'700'}},t('welcome')+', '+(USER?.display_name||USER?.username||'')),
+    h('div',{style:{fontSize:'13px',color:T.mut,marginTop:'4px'}},new Date().toLocaleDateString(USER?.lang==='he'?'he-IL':'en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}))
   ));
 
-  page.appendChild(main);
-  app.appendChild(page);
+  if(APP_TAB==='dashboard') renderDashboard(main);
+  else if(APP_TAB==='transactions') renderTransactions(main);
+  else if(APP_TAB==='goals') renderGoals(main);
+  else if(APP_TAB==='settings') renderSettings(main);
+
+  wrapper.appendChild(main);
+
+  // ─── Mobile Bottom Nav ────────────────────────────────────
+  const bottomNav=h('div',{className:'mobile-nav',style:{position:'fixed',bottom:0,left:0,right:0,background:T.glass,borderTop:'1px solid '+T.bdr,padding:'8px 8px calc(var(--sb) + 8px)',display:'flex',justifyContent:'space-around',backdropFilter:'blur(16px)',zIndex:100}});
+  const mobileNavItems=[...navItems];
+  if(USER?.is_admin) mobileNavItems.push({id:'_admin',icon:'🛡',label:t('admin')});
+  mobileNavItems.forEach(n=>{
+    const active=n.id==='_admin'?false:APP_TAB===n.id;
+    bottomNav.appendChild(h('button',{style:{background:'none',border:'none',color:active?T.acc:T.mut,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:'2px',padding:'6px 12px',borderRadius:'10px',fontSize:'10px',fontWeight:active?'700':'400'},
+      onclick:()=>{if(n.id==='_admin'){VIEW='admin';render();}else{APP_TAB=n.id;render();}}},
+      h('span',{style:{fontSize:'20px'}},n.icon),n.label));
+  });
+  wrapper.appendChild(bottomNav);
+
+  app.appendChild(wrapper);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DASHBOARD TAB
+// ═══════════════════════════════════════════════════════════════
+async function renderDashboard(container){
+  const loading=h('div',{style:{textAlign:'center',padding:'40px',color:T.mut}},h('span',{className:'spinner'}),' Loading...');
+  container.appendChild(loading);
+  try{
+    const stats=await api('GET','/stats');
+    loading.remove();
+    // Stat cards
+    const grid=h('div',{style:{display:'flex',gap:'12px',marginBottom:'24px',flexWrap:IS_MOBILE?'wrap':'nowrap'},className:'fu'});
+    grid.appendChild(statCard(t('monthExpenses'), '₪'+Number(stats.month_expenses).toLocaleString(), T.red));
+    grid.appendChild(statCard(t('monthIncome'), '₪'+Number(stats.month_income).toLocaleString(), T.grn));
+    grid.appendChild(statCard(t('totalTx'), String(stats.total_transactions), T.acc2));
+    container.appendChild(grid);
+
+    // Category breakdown
+    if(stats.categories && stats.categories.length){
+      const catBox=h('div',{style:{background:T.card,borderRadius:'16px',padding:'20px',border:'1px solid '+T.bdr,marginBottom:'20px'},className:'fu'},
+        h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'16px'}},t('category')+' Breakdown'));
+      const maxCat=Math.max(...stats.categories.map(c=>c.total),1);
+      stats.categories.forEach(c=>{
+        const pct=Math.round(c.total/maxCat*100);
+        catBox.appendChild(h('div',{style:{marginBottom:'12px'}},
+          h('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'13px',marginBottom:'4px'}},
+            h('span',{},c.category), h('span',{style:{color:T.acc}},'₪'+Number(c.total).toLocaleString())),
+          h('div',{style:{width:'100%',height:'8px',borderRadius:'4px',background:T.card2}},
+            h('div',{style:{width:pct+'%',height:'100%',borderRadius:'4px',background:`linear-gradient(90deg,${T.acc},${T.acc2})`,transition:'width .5s ease'}}))
+        ));
+      });
+      container.appendChild(catBox);
+    }
+
+    // Goals summary
+    if(stats.goals && stats.goals.length){
+      const goalBox=h('div',{style:{background:T.card,borderRadius:'16px',padding:'20px',border:'1px solid '+T.bdr},className:'fu'},
+        h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'16px'}},t('goals')));
+      stats.goals.forEach(g=>{
+        const pct=g.target>0?Math.min(Math.round(g.saved/g.target*100),100):0;
+        goalBox.appendChild(h('div',{style:{marginBottom:'14px'}},
+          h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',fontSize:'13px',marginBottom:'4px'}},
+            h('span',{},g.icon+' '+g.name),
+            h('span',{style:{color:T.grn}},pct+'%')),
+          h('div',{style:{width:'100%',height:'8px',borderRadius:'4px',background:T.card2}},
+            h('div',{style:{width:pct+'%',height:'100%',borderRadius:'4px',background:g.color||T.grn,transition:'width .5s ease'}}))
+        ));
+      });
+      container.appendChild(goalBox);
+    }
+
+    if(!stats.total_transactions){
+      container.appendChild(h('div',{style:{textAlign:'center',padding:'40px',color:T.mut,background:T.card,borderRadius:'16px',border:'1px solid '+T.bdr},className:'fu'},
+        h('div',{style:{fontSize:'40px',marginBottom:'12px'}},'📭'),
+        h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'4px'}},t('noData')),
+        h('div',{style:{fontSize:'12px'}},USER?.lang==='he'?'הוסף את התנועה הראשונה שלך בלשונית "תנועות"':'Add your first transaction in the "Transactions" tab'),
+        h('button',{style:{marginTop:'16px',padding:'10px 24px',borderRadius:'10px',background:`linear-gradient(135deg,${T.acc},${T.acc2})`,color:'#fff',fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{APP_TAB='transactions';render();}},t('addTx'))
+      ));
+    }
+  }catch(e){loading.remove();container.appendChild(errBox(e.message));}
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TRANSACTIONS TAB
+// ═══════════════════════════════════════════════════════════════
+async function renderTransactions(container){
+  // Add transaction form
+  let showForm=false;
+  const formBox=h('div',{style:{marginBottom:'20px'}});
+
+  function renderForm(){
+    formBox.innerHTML='';
+    if(!showForm){
+      formBox.appendChild(h('button',{style:{width:'100%',padding:'14px',borderRadius:'14px',background:T.card,border:'2px dashed '+T.bdr,color:T.acc,fontWeight:'700',fontSize:'14px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px'},onclick:()=>{showForm=true;renderForm();}},
+        h('span',{style:{fontSize:'18px'}},'+'), t('addTx')));
+      return;
+    }
+    let txDate=new Date().toISOString().slice(0,10), txDesc='', txAmt='', txCat='Food', txType='expense';
+    const cats=['Food','Transport','Shopping','Entertainment','Bills','Health','Education','Salary','Freelance','Gift','Other'];
+    const form=h('div',{style:{background:T.card,borderRadius:'16px',padding:'20px',border:'1px solid '+T.acc+'44'}},
+      h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'16px'}},t('addTx')),
+      // Type toggle
+      h('div',{style:{display:'flex',gap:'8px',marginBottom:'12px'}},
+        h('button',{style:{flex:1,padding:'10px',borderRadius:'10px',background:txType==='expense'?T.red+'22':T.card2,border:'1px solid '+(txType==='expense'?T.red:T.bdr),color:txType==='expense'?T.red:T.mut,fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{txType='expense';renderForm();}},t('expense')),
+        h('button',{style:{flex:1,padding:'10px',borderRadius:'10px',background:txType==='income'?T.grn+'22':T.card2,border:'1px solid '+(txType==='income'?T.grn:T.bdr),color:txType==='income'?T.grn:T.mut,fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{txType='income';renderForm();}},t('income'))
+      ),
+      inputField(t('date'),'date',txDate,function(e){txDate=e.target.value;}),
+      inputField(t('description'),'text',txDesc,function(e){txDesc=e.target.value;}),
+      inputField(t('amount'),'number',txAmt,function(e){txAmt=e.target.value;}),
+      // Category selector
+      h('select',{style:{width:'100%',padding:'14px 16px',borderRadius:'12px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontSize:'14px',marginBottom:'12px'},onchange:function(e){txCat=e.target.value;}},
+        ...cats.map(c=>h('option',{value:c,style:{background:T.card2}},c))),
+      h('div',{style:{display:'flex',gap:'8px'}},
+        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontWeight:'700',cursor:'pointer'},onclick:()=>{showForm=false;renderForm();}},t('cancel')),
+        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:`linear-gradient(135deg,${T.acc},${T.acc2})`,color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:async()=>{
+          if(!txDesc||!txAmt){alert(t('fillFields'));return;}
+          try{
+            await api('POST','/transactions',{transactions:[{date:txDate,description:txDesc,amount:parseFloat(txAmt),category:txCat,type:txType}]});
+            showForm=false;APP_TAB='transactions';render();
+          }catch(e){alert(e.message);}
+        }},t('save'))
+      )
+    );
+    formBox.appendChild(form);
+  }
+  renderForm();
+  container.appendChild(formBox);
+
+  // Transaction list
+  const listBox=h('div',{className:'fu'});
+  container.appendChild(listBox);
+  try{
+    const txns=await api('GET','/transactions');
+    if(!txns.length){
+      listBox.appendChild(h('div',{style:{textAlign:'center',padding:'40px',color:T.mut}},'📭 '+t('noData')));
+      return;
+    }
+    txns.forEach(tx=>{
+      const isIncome=tx.type==='income';
+      listBox.appendChild(h('div',{style:{background:T.card,borderRadius:'14px',padding:'14px 16px',border:'1px solid '+T.bdr,marginBottom:'8px',display:'flex',alignItems:'center',justifyContent:'space-between'}},
+        h('div',{style:{display:'flex',alignItems:'center',gap:'12px',flex:1,minWidth:0}},
+          h('div',{style:{width:'40px',height:'40px',borderRadius:'10px',background:isIncome?T.grn+'18':T.red+'18',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'16px',flexShrink:0}},isIncome?'↗':'↘'),
+          h('div',{style:{minWidth:0}},
+            h('div',{style:{fontSize:'13px',fontWeight:'700',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}},tx.description),
+            h('div',{style:{fontSize:'11px',color:T.mut}},tx.category+' · '+tx.date))
+        ),
+        h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},
+          h('div',{style:{fontSize:'14px',fontWeight:'700',color:isIncome?T.grn:T.red,whiteSpace:'nowrap'}},(isIncome?'+':'-')+'₪'+Number(tx.amount).toLocaleString()),
+          h('button',{style:{background:'none',border:'none',color:T.mut,cursor:'pointer',fontSize:'14px',padding:'4px'},onclick:async()=>{
+            if(confirm(t('delete')+'?')){try{await api('DELETE','/transactions/'+tx.id);APP_TAB='transactions';render();}catch(e){alert(e.message);}}
+          }},'✕')
+        )
+      ));
+    });
+  }catch(e){listBox.appendChild(errBox(e.message));}
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  GOALS TAB
+// ═══════════════════════════════════════════════════════════════
+async function renderGoals(container){
+  let showForm=false;
+  const formBox=h('div',{style:{marginBottom:'20px'}});
+  function renderForm(){
+    formBox.innerHTML='';
+    if(!showForm){
+      formBox.appendChild(h('button',{style:{width:'100%',padding:'14px',borderRadius:'14px',background:T.card,border:'2px dashed '+T.bdr,color:T.acc,fontWeight:'700',fontSize:'14px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px'},onclick:()=>{showForm=true;renderForm();}},
+        h('span',{style:{fontSize:'18px'}},'+'), t('addGoal')));
+      return;
+    }
+    let gName='',gTarget='',gIcon='🎯',gColor='#10B981';
+    const icons=['🎯','🏖','🚗','🏠','💻','🎓','💰','❤','✈','📱'];
+    const colors=['#10B981','#3B82F6','#F59E0B','#EF4444','#8B5CF6','#EC4899','#06B6D4','#F97316'];
+    const form=h('div',{style:{background:T.card,borderRadius:'16px',padding:'20px',border:'1px solid '+T.acc+'44'}},
+      h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'16px'}},t('addGoal')),
+      // Icon picker
+      h('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap',marginBottom:'12px'}},
+        ...icons.map(ic=>h('button',{style:{width:'40px',height:'40px',borderRadius:'10px',background:gIcon===ic?T.acc+'22':T.card2,border:'1px solid '+(gIcon===ic?T.acc:T.bdr),fontSize:'20px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'},onclick:()=>{gIcon=ic;renderForm();}},ic))),
+      inputField(t('goalName'),'text',gName,function(e){gName=e.target.value;}),
+      inputField(t('target'),'number',gTarget,function(e){gTarget=e.target.value;}),
+      // Color picker
+      h('div',{style:{display:'flex',gap:'6px',marginBottom:'16px'}},
+        ...colors.map(c=>h('button',{style:{width:'32px',height:'32px',borderRadius:'50%',background:c,border:gColor===c?'3px solid #fff':'3px solid transparent',cursor:'pointer'},onclick:()=>{gColor=c;renderForm();}}))),
+      h('div',{style:{display:'flex',gap:'8px'}},
+        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontWeight:'700',cursor:'pointer'},onclick:()=>{showForm=false;renderForm();}},t('cancel')),
+        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:`linear-gradient(135deg,${T.acc},${T.acc2})`,color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:async()=>{
+          if(!gName||!gTarget){alert(t('fillFields'));return;}
+          try{await api('POST','/goals',{name:gName,target:parseFloat(gTarget),icon:gIcon,color:gColor});showForm=false;APP_TAB='goals';render();}catch(e){alert(e.message);}
+        }},t('save'))
+      )
+    );
+    formBox.appendChild(form);
+  }
+  renderForm();
+  container.appendChild(formBox);
+
+  const listBox=h('div',{className:'fu'});
+  container.appendChild(listBox);
+  try{
+    const goals=await api('GET','/goals');
+    if(!goals.length){
+      listBox.appendChild(h('div',{style:{textAlign:'center',padding:'40px',color:T.mut}},'🎯 '+t('noData')));
+      return;
+    }
+    goals.forEach(g=>{
+      const pct=g.target>0?Math.min(Math.round(g.saved/g.target*100),100):0;
+      const card=h('div',{style:{background:T.card,borderRadius:'16px',padding:'18px',border:'1px solid '+T.bdr,marginBottom:'12px'}},
+        h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}},
+          h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},
+            h('span',{style:{fontSize:'24px'}},g.icon),
+            h('div',{},h('div',{style:{fontSize:'14px',fontWeight:'700'}},g.name),
+              h('div',{style:{fontSize:'11px',color:T.mut}},'₪'+Number(g.saved).toLocaleString()+' / ₪'+Number(g.target).toLocaleString()))),
+          h('div',{style:{display:'flex',gap:'6px'}},
+            h('button',{style:{padding:'6px 10px',borderRadius:'8px',background:T.grn+'18',border:'1px solid '+T.grn+'33',color:T.grn,fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:async()=>{
+              const amt=prompt(t('amount'));if(amt&&!isNaN(amt)){try{await api('PUT','/goals/'+g.id,{saved:g.saved+parseFloat(amt)});APP_TAB='goals';render();}catch(e){alert(e.message);}}
+            }},'+'),
+            h('button',{style:{background:'none',border:'none',color:T.mut,cursor:'pointer',fontSize:'13px'},onclick:async()=>{
+              if(confirm(t('delete')+'?')){try{await api('DELETE','/goals/'+g.id);APP_TAB='goals';render();}catch(e){alert(e.message);}}
+            }},'✕'))
+        ),
+        h('div',{style:{width:'100%',height:'10px',borderRadius:'5px',background:T.card2}},
+          h('div',{style:{width:pct+'%',height:'100%',borderRadius:'5px',background:g.color||T.grn,transition:'width .5s ease'}})),
+        h('div',{style:{textAlign:'right',fontSize:'12px',fontWeight:'700',color:g.color||T.grn,marginTop:'4px'}},pct+'%')
+      );
+      listBox.appendChild(card);
+    });
+  }catch(e){listBox.appendChild(errBox(e.message));}
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SETTINGS TAB
+// ═══════════════════════════════════════════════════════════════
+function renderSettings(container){
+  const card=h('div',{style:{background:T.card,borderRadius:'16px',padding:'20px',border:'1px solid '+T.bdr,marginBottom:'16px'},className:'fu'},
+    h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'16px'}},t('language')),
+    h('div',{style:{display:'flex',gap:'8px'}},
+      h('button',{style:{flex:1,padding:'14px',borderRadius:'12px',background:(USER?.lang||'en')==='en'?T.acc2+'22':T.card2,border:'1px solid '+((USER?.lang||'en')==='en'?T.acc2:T.bdr),color:(USER?.lang||'en')==='en'?T.acc2:T.mut,fontWeight:'700',fontSize:'14px',cursor:'pointer'},onclick:async()=>{
+        try{await api('POST','/update-profile',{lang:'en'});USER.lang='en';saveSession();render();}catch(e){alert(e.message);}
+      }},'English'),
+      h('button',{style:{flex:1,padding:'14px',borderRadius:'12px',background:(USER?.lang||'en')==='he'?T.acc2+'22':T.card2,border:'1px solid '+((USER?.lang||'en')==='he'?T.acc2:T.bdr),color:(USER?.lang||'en')==='he'?T.acc2:T.mut,fontWeight:'700',fontSize:'14px',cursor:'pointer'},onclick:async()=>{
+        try{await api('POST','/update-profile',{lang:'he'});USER.lang='he';saveSession();render();}catch(e){alert(e.message);}
+      }},'עברית')
+    )
+  );
+  container.appendChild(card);
+
+  // Replay tour button
+  container.appendChild(h('div',{style:{background:T.card,borderRadius:'16px',padding:'20px',border:'1px solid '+T.bdr,marginBottom:'16px'},className:'fu'},
+    h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'12px'}},USER?.lang==='he'?'סיור באפליקציה':'App Tour'),
+    h('button',{style:{width:'100%',padding:'12px',borderRadius:'12px',background:T.acc+'18',border:'1px solid '+T.acc+'33',color:T.acc,fontWeight:'700',cursor:'pointer'},onclick:()=>showTour()},USER?.lang==='he'?'הפעל סיור מחדש':'Replay Tour')
+  ));
+
+  // Profile
+  container.appendChild(h('div',{style:{background:T.card,borderRadius:'16px',padding:'20px',border:'1px solid '+T.bdr},className:'fu'},
+    h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'16px'}},t('profile')),
+    h('div',{style:{display:'flex',alignItems:'center',gap:'14px'}},
+      h('div',{style:{width:'52px',height:'52px',borderRadius:'14px',background:`linear-gradient(135deg,${T.acc},${T.acc2})`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'22px',fontWeight:'700',color:'#fff'}},(USER?.display_name||USER?.username||'?')[0].toUpperCase()),
+      h('div',{},
+        h('div',{style:{fontSize:'16px',fontWeight:'700'}},USER?.display_name||USER?.username),
+        h('div',{style:{fontSize:'12px',color:T.mut}},'@'+(USER?.username||'')))
+    )
+  ));
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -263,59 +769,71 @@ function renderAppRedirect(app){
 // ═══════════════════════════════════════════════════════════════
 async function renderAdmin(app){
   app.innerHTML='';
-  const page = h('div',{style:{minHeight:'100vh',background:T.bg}});
+  const dir=isRTL()?'rtl':'ltr';
+  const page=h('div',{style:{minHeight:'100vh',background:T.bg,direction:dir}});
 
   // Header
   page.appendChild(h('div',{style:{background:T.glass,borderBottom:'1px solid '+T.bdr,padding:'calc(var(--st) + 10px) 16px 12px',display:'flex',alignItems:'center',justifyContent:'space-between',backdropFilter:'blur(16px)'}},
     h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},
-      h('div',{style:{width:'34px',height:'34px',borderRadius:'10px',background:'linear-gradient(135deg,'+T.red+','+T.acc+')',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'14px',fontWeight:'700',color:'#fff'}},'⚙'),
-      h('div',{},h('div',{style:{fontSize:'16px',fontWeight:'700'}},'Admin Panel'),h('div',{style:{fontSize:'10px',color:T.mut}},'User Management'))
-    ),
+      h('div',{style:{width:'34px',height:'34px',borderRadius:'10px',background:`linear-gradient(135deg,${T.red},${T.acc})`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'14px',fontWeight:'700',color:'#fff'}},'⚙'),
+      h('div',{},h('div',{style:{fontSize:'16px',fontWeight:'700'}},t('adminPanel')),h('div',{style:{fontSize:'10px',color:T.mut}},t('userMgmt')))),
     h('div',{style:{display:'flex',gap:'8px'}},
-      h('button',{style:{padding:'6px 12px',borderRadius:'8px',background:T.acc+'22',border:'1px solid '+T.acc+'44',color:T.acc,fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:()=>{VIEW='app';render();}},'App'),
-      h('button',{style:{padding:'6px 12px',borderRadius:'8px',background:T.red+'22',border:'1px solid '+T.red+'44',color:T.red,fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:()=>{clearSession();VIEW='login';render();}},'Sign Out')
-    )
+      h('button',{style:{padding:'6px 12px',borderRadius:'8px',background:T.acc+'22',border:'1px solid '+T.acc+'44',color:T.acc,fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:()=>{VIEW='app';render();}},t('app')),
+      h('button',{style:{padding:'6px 12px',borderRadius:'8px',background:T.red+'22',border:'1px solid '+T.red+'44',color:T.red,fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:()=>{clearSession();VIEW='login';render();}},t('signOut')))
   ));
 
-  const main = h('div',{style:{padding:'20px 16px calc(20px + var(--sb))',maxWidth:'700px',margin:'0 auto'},className:'fu'});
+  const main=h('div',{style:{padding:'20px 16px calc(20px + var(--sb))',maxWidth:'700px',margin:'0 auto'},className:'fu'});
 
-  // Load users
-  let users = [];
-  try { users = await api('GET','/admin/users'); } catch(e){ main.appendChild(errBox(e.message)); }
+  // ─── Global Settings (API Key) ────────────────────────────
+  const settingsCard=h('div',{style:{background:T.card,borderRadius:'16px',padding:'20px',border:'1px solid '+T.bdr,marginBottom:'20px'}},
+    h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'4px'}},t('globalSettings')),
+    h('div',{style:{fontSize:'11px',color:T.mut,marginBottom:'16px'}},t('apiKeyDesc'))
+  );
+  try{
+    const settings=await api('GET','/admin/settings');
+    let aiKey=settings.global_ai_key||'';
+    let currency=settings.currency||'₪';
+    const keyWrap=h('div',{className:'pw-wrap',style:{marginBottom:'12px'}});
+    const keyInp=h('input',{type:'password',placeholder:t('apiKey'),value:aiKey,
+      style:{width:'100%',padding:'14px 16px',paddingRight:'48px',borderRadius:'12px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontSize:'14px',fontFamily:'monospace'},
+      oninput:function(e){aiKey=e.target.value;}});
+    const keyToggle=h('button',{className:'pw-toggle',onclick:()=>{const s=keyInp.type==='password';keyInp.type=s?'text':'password';keyToggle.textContent=s?'🙈':'👁';}},
+      '👁');
+    keyWrap.appendChild(keyInp);keyWrap.appendChild(keyToggle);
+    settingsCard.appendChild(keyWrap);
+    settingsCard.appendChild(inputField(t('currency'),'text',currency,function(e){currency=e.target.value;}));
+    const saveBtn=h('button',{style:{width:'100%',padding:'12px',borderRadius:'12px',background:`linear-gradient(135deg,${T.acc},${T.acc2})`,color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:async()=>{
+      saveBtn.textContent=t('savingSettings');
+      try{await api('POST','/admin/settings',{global_ai_key:aiKey,currency});saveBtn.textContent=t('settingsSaved');setTimeout(()=>{saveBtn.textContent=t('save');},2000);}
+      catch(e){alert(e.message);saveBtn.textContent=t('save');}
+    }},t('save'));
+    settingsCard.appendChild(saveBtn);
+  }catch(e){settingsCard.appendChild(errBox(e.message));}
+  main.appendChild(settingsCard);
 
-  const pending = users.filter(u=>!u.is_approved);
-  const active = users.filter(u=>u.is_approved&&u.is_active);
-  const inactive = users.filter(u=>u.is_approved&&!u.is_active);
+  // ─── Users ────────────────────────────────────────────────
+  let users=[];
+  try{users=await api('GET','/admin/users');}catch(e){main.appendChild(errBox(e.message));}
+  const pending=users.filter(u=>!u.is_approved);
+  const active=users.filter(u=>u.is_approved&&u.is_active);
+  const inactive=users.filter(u=>u.is_approved&&!u.is_active);
 
-  // Stats
   main.appendChild(h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'10px',marginBottom:'20px'}},
-    h('div',{style:{background:T.card,borderRadius:'14px',padding:'14px',border:'1px solid '+T.bdr,textAlign:'center'}},
-      h('div',{style:{fontSize:'24px',fontWeight:'700',color:T.grn}},String(active.length)),
-      h('div',{style:{fontSize:'10px',color:T.mut,marginTop:'2px'}},'Active')),
-    h('div',{style:{background:T.card,borderRadius:'14px',padding:'14px',border:'1px solid '+T.bdr,textAlign:'center'}},
-      h('div',{style:{fontSize:'24px',fontWeight:'700',color:T.acc}},String(pending.length)),
-      h('div',{style:{fontSize:'10px',color:T.mut,marginTop:'2px'}},'Pending')),
-    h('div',{style:{background:T.card,borderRadius:'14px',padding:'14px',border:'1px solid '+T.bdr,textAlign:'center'}},
-      h('div',{style:{fontSize:'24px',fontWeight:'700',color:T.red}},String(inactive.length)),
-      h('div',{style:{fontSize:'10px',color:T.mut,marginTop:'2px'}},'Inactive'))
-  ));
+    statCard(t('active'),String(active.length),T.grn),
+    statCard(t('pending'),String(pending.length),T.acc),
+    statCard(t('inactive'),String(inactive.length),T.red)));
 
-  // Pending approvals
   if(pending.length){
     main.appendChild(h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'10px',color:T.acc,display:'flex',alignItems:'center',gap:'8px'}},
-      h('span',{style:{width:'8px',height:'8px',borderRadius:'99px',background:T.acc,display:'inline-block'}}), 'Pending Approval ('+pending.length+')'));
+      h('span',{style:{width:'8px',height:'8px',borderRadius:'99px',background:T.acc,display:'inline-block'}}),t('pending')+' ('+pending.length+')'));
     pending.forEach(u=>main.appendChild(userCard(u,'pending')));
   }
-
-  // Active users
   main.appendChild(h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'10px',marginTop:'16px',color:T.grn,display:'flex',alignItems:'center',gap:'8px'}},
-    h('span',{style:{width:'8px',height:'8px',borderRadius:'99px',background:T.grn,display:'inline-block'}}), 'Active Users ('+active.length+')'));
+    h('span',{style:{width:'8px',height:'8px',borderRadius:'99px',background:T.grn,display:'inline-block'}}),t('active')+' ('+active.length+')'));
   active.forEach(u=>main.appendChild(userCard(u,'active')));
-
-  // Inactive
   if(inactive.length){
     main.appendChild(h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'10px',marginTop:'16px',color:T.red,display:'flex',alignItems:'center',gap:'8px'}},
-      h('span',{style:{width:'8px',height:'8px',borderRadius:'99px',background:T.red,display:'inline-block'}}), 'Inactive ('+inactive.length+')'));
+      h('span',{style:{width:'8px',height:'8px',borderRadius:'99px',background:T.red,display:'inline-block'}}),t('inactive')+' ('+inactive.length+')'));
     inactive.forEach(u=>main.appendChild(userCard(u,'inactive')));
   }
 
@@ -324,45 +842,24 @@ async function renderAdmin(app){
 }
 
 function userCard(u, status){
-  const isAdmin = u.is_admin;
-  const card = h('div',{style:{background:T.card,borderRadius:'14px',padding:'14px',border:'1px solid '+T.bdr,marginBottom:'10px'}},
+  const isAdmin=u.is_admin;
+  const card=h('div',{style:{background:T.card,borderRadius:'14px',padding:'14px',border:'1px solid '+T.bdr,marginBottom:'10px'}},
     h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}},
       h('div',{},
         h('div',{style:{fontSize:'14px',fontWeight:'700',display:'flex',alignItems:'center',gap:'6px'}},
           u.display_name||u.username,
-          isAdmin?h('span',{style:{fontSize:'9px',padding:'2px 8px',borderRadius:'99px',background:T.acc2+'22',color:T.acc2,fontWeight:'700'}},'ADMIN'):null
-        ),
-        h('div',{style:{fontSize:'11px',color:T.mut,marginTop:'2px'}},'@'+u.username+' · Joined '+u.created_at?.split('T')[0]+(u.last_login?' · Last login: '+u.last_login.split('T')[0]:''))
-      ),
-      status==='pending'?h('div',{style:{width:'10px',height:'10px',borderRadius:'99px',background:T.acc}}):
-      status==='active'?h('div',{style:{width:'10px',height:'10px',borderRadius:'99px',background:T.grn}}):
-      h('div',{style:{width:'10px',height:'10px',borderRadius:'99px',background:T.red}})
-    )
-  );
+          isAdmin?h('span',{style:{fontSize:'9px',padding:'2px 8px',borderRadius:'99px',background:T.acc2+'22',color:T.acc2,fontWeight:'700'}},'ADMIN'):null),
+        h('div',{style:{fontSize:'11px',color:T.mut,marginTop:'2px'}},'@'+u.username+' · '+u.created_at?.split('T')[0]+(u.last_login?' · Last: '+u.last_login.split('T')[0]:''))),
+      h('div',{style:{width:'10px',height:'10px',borderRadius:'99px',background:status==='pending'?T.acc:status==='active'?T.grn:T.red}})));
 
   if(!isAdmin){
-    const actions = h('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap'}});
-
-    if(status==='pending'){
-      actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:T.grn,color:'#fff',fontWeight:'700',fontSize:'11px',cursor:'pointer'},
-        onclick:async()=>{try{await api('POST','/admin/approve',{user_id:u.id});VIEW='admin';render();}catch(e){alert(e.message);}}},'✓ Approve'));
-    }
-    if(status==='active'){
-      actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:T.red+'22',border:'1px solid '+T.red+'44',color:T.red,fontWeight:'700',fontSize:'11px',cursor:'pointer'},
-        onclick:async()=>{if(confirm('Deactivate '+u.username+'?')){try{await api('POST','/admin/deactivate',{user_id:u.id});VIEW='admin';render();}catch(e){alert(e.message);}}}},'Deactivate'));
-    }
-    if(status==='inactive'){
-      actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:T.grn+'22',border:'1px solid '+T.grn+'44',color:T.grn,fontWeight:'700',fontSize:'11px',cursor:'pointer'},
-        onclick:async()=>{try{await api('POST','/admin/activate',{user_id:u.id});VIEW='admin';render();}catch(e){alert(e.message);}}},'Activate'));
-    }
-
-    // Reset password
-    actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontWeight:'600',fontSize:'11px',cursor:'pointer'},
-      onclick:async()=>{const np=prompt('New password for '+u.username+' (6+ chars):');if(np&&np.length>=6){try{await api('POST','/admin/reset-password',{user_id:u.id,new_password:np});alert('Password reset successfully.');}catch(e){alert(e.message);}}}},'Reset Password'));
-
+    const actions=h('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap'}});
+    if(status==='pending') actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:T.grn,color:'#fff',fontWeight:'700',fontSize:'11px',cursor:'pointer'},onclick:async()=>{try{await api('POST','/admin/approve',{user_id:u.id});VIEW='admin';render();}catch(e){alert(e.message);}}},'✓ '+t('approve')));
+    if(status==='active') actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:T.red+'22',border:'1px solid '+T.red+'44',color:T.red,fontWeight:'700',fontSize:'11px',cursor:'pointer'},onclick:async()=>{if(confirm(t('deactivate')+' '+u.username+'?')){try{await api('POST','/admin/deactivate',{user_id:u.id});VIEW='admin';render();}catch(e){alert(e.message);}}}},' '+t('deactivate')));
+    if(status==='inactive') actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:T.grn+'22',border:'1px solid '+T.grn+'44',color:T.grn,fontWeight:'700',fontSize:'11px',cursor:'pointer'},onclick:async()=>{try{await api('POST','/admin/activate',{user_id:u.id});VIEW='admin';render();}catch(e){alert(e.message);}}},' '+t('activate')));
+    actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontWeight:'600',fontSize:'11px',cursor:'pointer'},onclick:async()=>{const np=prompt(t('resetPw')+' (6+):');if(np&&np.length>=6){try{await api('POST','/admin/reset-password',{user_id:u.id,new_password:np});alert('✓');}catch(e){alert(e.message);}}}},' '+t('resetPw')));
     card.appendChild(actions);
   }
-
   return card;
 }
 
@@ -371,20 +868,12 @@ function userCard(u, status){
 // ═══════════════════════════════════════════════════════════════
 loadSession();
 if(TOKEN && USER){
-  // Verify session is still valid
   api('GET','/me').then(res=>{
-    USER = res;
-    VIEW = USER.is_admin ? 'admin' : 'app';
+    USER=Object.assign(USER,res);
+    VIEW=USER.is_admin?'admin':'app';
     render();
-  }).catch(()=>{
-    clearSession();
-    VIEW = 'login';
-    render();
-  });
-} else {
-  VIEW = 'login';
-  render();
-}
+  }).catch(()=>{clearSession();VIEW='login';render();});
+} else {VIEW='login';render();}
 </script>
 </body>
 </html>
