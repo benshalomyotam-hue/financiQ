@@ -55,7 +55,99 @@ def record_attempt(ip):
     if ip not in LOGIN_ATTEMPTS: LOGIN_ATTEMPTS[ip] = []
     LOGIN_ATTEMPTS[ip].append((now, 1))
 
+TURSO_URL = os.environ.get("TURSO_URL", "")  # e.g. https://mydb-myorg.turso.io
+TURSO_TOKEN = os.environ.get("TURSO_TOKEN", "")
+USE_TURSO = bool(TURSO_URL and TURSO_TOKEN)
+
+# ═══════════════ Database Adapter (Turso HTTP or local SQLite) ═══════════════
+class TursoRow(dict):
+    """Dict-like row that also supports index access like sqlite3.Row"""
+    def __init__(self, columns, values):
+        super().__init__(zip(columns, values))
+        self._values = values
+        self._columns = columns
+    def __getitem__(self, key):
+        if isinstance(key, int): return self._values[key]
+        return super().__getitem__(key)
+    def keys(self): return self._columns
+
+class TursoCursor:
+    def __init__(self, columns, rows, rows_affected=0):
+        self.columns = columns
+        self.rows = rows
+        self.lastrowid = 0
+        self.rowcount = rows_affected
+    def fetchone(self):
+        return self.rows[0] if self.rows else None
+    def fetchall(self):
+        return self.rows
+
+class TursoConn:
+    """Wraps Turso HTTP API to behave like sqlite3 connection"""
+    def __init__(self, url, token):
+        self.url = url.rstrip("/")
+        self.token = token
+        self._pending = []  # batch statements for commit
+
+    def _http_exec(self, statements):
+        """Execute statements via Turso HTTP API"""
+        body = json.dumps({"statements": statements}).encode()
+        req = urllib.request.Request(self.url, data=body, headers={
+            "Authorization": f"Bearer {self.token}",
+            "Content-Type": "application/json"
+        })
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                return json.loads(resp.read())
+        except urllib.error.HTTPError as e:
+            err = e.read().decode() if e.fp else str(e)
+            print(f"Turso error: {err[:300]}")
+            return [{"results":{"columns":[],"rows":[]},"error":None}]
+        except Exception as e:
+            print(f"Turso connection error: {e}")
+            return [{"results":{"columns":[],"rows":[]},"error":str(e)}]
+
+    def execute(self, sql, params=None):
+        stmt = {"q": sql}
+        if params:
+            # Convert named or positional params
+            if isinstance(params, (list, tuple)):
+                stmt["params"] = [self._convert_param(p) for p in params]
+            elif isinstance(params, dict):
+                stmt["params"] = {k: self._convert_param(v) for k, v in params.items()}
+        results = self._http_exec([stmt])
+        if results and len(results) > 0:
+            r = results[0]
+            if "error" in r and r["error"]:
+                return TursoCursor([], [], 0)
+            res = r.get("results", {})
+            cols = res.get("columns", [])
+            raw_rows = res.get("rows", [])
+            rows = [TursoRow(cols, row) for row in raw_rows]
+            cursor = TursoCursor(cols, rows, res.get("rows_affected", 0))
+            # Try to get lastrowid
+            if "last_insert_rowid" in res:
+                cursor.lastrowid = res["last_insert_rowid"]
+            return cursor
+        return TursoCursor([], [], 0)
+
+    def _convert_param(self, p):
+        if p is None: return None
+        if isinstance(p, bool): return int(p)
+        return p
+
+    def executescript(self, script):
+        """Execute multiple SQL statements"""
+        stmts = [s.strip() for s in script.split(";") if s.strip()]
+        if stmts:
+            self._http_exec(stmts)
+
+    def commit(self): pass  # Turso HTTP API auto-commits
+    def close(self): pass
+
 def get_db():
+    if USE_TURSO:
+        return TursoConn(TURSO_URL, TURSO_TOKEN)
     conn = sqlite3.connect(DB_PATH); conn.row_factory = sqlite3.Row; conn.execute("PRAGMA journal_mode=WAL"); return conn
 
 def init_db():
@@ -132,6 +224,7 @@ def init_db():
         ("users","onboarding_data","TEXT DEFAULT '{}'"),("users","terms_accepted","INTEGER DEFAULT 0"),
         ("users","terms_accepted_at","TEXT"),("users","last_activity","TEXT"),
         ("users","household_id","INTEGER DEFAULT 0"),
+        ("users","theme","TEXT DEFAULT 'dark'"),
         ("transactions","card_name","TEXT DEFAULT ''"),("transactions","is_recurring","INTEGER DEFAULT 0"),
         ("transactions","recurring_label","TEXT DEFAULT ''"),
     ]
@@ -221,7 +314,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if path == "/api/me":
             u = self.get_user()
             if not u: return self.send_json({"error":"Unauthorized"},401)
-            return self.send_json({k:u[k] for k in ["id","username","display_name","role","lang","tour_completed","onboarding_done","onboarding_data","terms_accepted"]})
+            return self.send_json({k:u[k] for k in ["id","username","display_name","role","lang","tour_completed","onboarding_done","onboarding_data","terms_accepted","theme"]})
 
         elif path == "/api/transactions":
             u = self.get_user()
@@ -428,7 +521,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             conn.commit(); conn.close()
             token = sign_token({"uid":user["id"],"user":user["username"],"role":user["role"],"exp":time.time()+SESSION_HOURS*3600})
             return self.send_json({"ok":True,"token":token,
-                "user":{k:user[k] for k in ["id","username","display_name","role","lang","tour_completed","onboarding_done","terms_accepted"]}})
+                "user":{k:user[k] for k in ["id","username","display_name","role","lang","tour_completed","onboarding_done","terms_accepted","theme"]}})
 
         elif path == "/api/heartbeat":
             u = self.get_user()
@@ -460,8 +553,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             u = self.get_user()
             if not u: return self.send_json({"error":"Unauthorized"},401)
             conn = get_db()
-            conn.execute("UPDATE users SET lang=?,display_name=? WHERE id=?",
-                (body.get("lang",u.get("lang","en")),body.get("display_name",u.get("display_name","")),u["id"]))
+            conn.execute("UPDATE users SET lang=?,display_name=?,theme=? WHERE id=?",
+                (body.get("lang",u.get("lang","en")),body.get("display_name",u.get("display_name","")),body.get("theme",u.get("theme","dark")),u["id"]))
             conn.commit(); conn.close()
             return self.send_json({"ok":True})
 
@@ -778,6 +871,12 @@ If you can't read the receipt, return {{"error":"Cannot read receipt"}}. Respond
             if onboarding:
                 user_goals_text = f"\nUser's goals: {onboarding.get('app_goals',[])}. Monthly expense target: {onboarding.get('monthly_expense_goal','not set')}."
             sys_prompt = f"""You are financiQ AI, a helpful financial advisor. Respond in {'Hebrew' if lang=='he' else 'English'}. Be concise, actionable. Use ₪.{user_goals_text}
+
+IMPORTANT: You can add transactions for the user! When the user tells you about an expense or income (e.g. "I spent 50 on coffee" or "I got paid 8000"), extract the details and include this EXACT format at the END of your message on its own line:
+[ADD_TX:{{"date":"{now.strftime('%Y-%m-%d')}","description":"...","amount":NUMBER,"category":"...","type":"expense or income"}}]
+Categories: Food,Transport,Shopping,Entertainment,Bills,Health,Education,Salary,Freelance,Gift,Mortgage,Insurance,Subscription,Other
+If the user doesn't specify a date, use today. If they don't specify a category, guess the best one. Always confirm what you're adding in your text response before the [ADD_TX:...] line.
+
 DATA ({now.strftime('%B %Y')}): Expenses:{exp_t['t']:.0f} Income:{inc_t['t']:.0f} Net:{inc_t['t']-exp_t['t']:.0f}
 Categories:\n{cat_lines or 'None'}
 Goals:\n{goal_lines or 'None'}
@@ -800,7 +899,23 @@ Transactions:\n{tx_lines or 'None'}"""
                         headers={"Content-Type":"application/json","Authorization":f"Bearer {ai_key}"})
                     with urllib.request.urlopen(req,timeout=30) as resp: result=json.loads(resp.read())
                     reply = result.get("choices",[{}])[0].get("message",{}).get("content","No response")
-                return self.send_json({"ok":True,"reply":reply})
+                # Parse ADD_TX commands from AI response
+                added_tx = None
+                import re as re2
+                tx_match = re2.search(r'\[ADD_TX:(\{.*?\})\]', reply)
+                if tx_match:
+                    try:
+                        tx_data = json.loads(tx_match.group(1))
+                        conn2 = get_db()
+                        conn2.execute("INSERT INTO transactions (user_id,date,description,amount,category,method,type) VALUES (?,?,?,?,?,?,?)",
+                            (u["id"], tx_data.get("date",""), tx_data.get("description",""), tx_data.get("amount",0),
+                             tx_data.get("category","Other"), "AI Agent", tx_data.get("type","expense")))
+                        conn2.commit(); conn2.close()
+                        added_tx = tx_data
+                        # Clean the command from the visible reply
+                        reply = reply.replace(tx_match.group(0), "").strip()
+                    except: pass
+                return self.send_json({"ok":True,"reply":reply,"added_tx":added_tx})
             except urllib.error.HTTPError as e:
                 err = e.read().decode() if e.fp else str(e)
                 return self.send_json({"error":f"AI error ({e.code}): {err[:200]}"},502)
