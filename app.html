@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FinanceIQ">
+<meta name="theme-color" content="#080C16">
+<title>FinanceIQ</title>
+<link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{font-family:'Alef',sans-serif;background:#080C16;color:#E2E8F0;min-height:100%;overscroll-behavior:none}
+input,button,textarea,select{font-family:'Alef',sans-serif;-webkit-appearance:none;border:none;outline:none}
+::-webkit-scrollbar{display:none}
+@keyframes fu{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.fu{animation:fu .35s ease forwards}
+.spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   FinanceIQ — Full Auth Frontend
+   Login → 2FA → App / Admin Panel
+   ═══════════════════════════════════════════════════════════════ */
+
+const API = location.origin + '/api';
+let TOKEN = null;
+let USER = null;
+let VIEW = 'login'; // login | register | verify2fa | setup2fa | app | admin
+let TEMP = {}; // temporary state for login flow
+let ERR = '';
+let LOADING = false;
+
+// ─── Theme ──────────────────────────────────────────────────
+const T = {
+  bg:'#080C16',card:'#0F1628',card2:'#161E34',bdr:'#1C2747',
+  txt:'#E2E8F0',mut:'#5A6A8A',acc:'#F59E0B',acc2:'#3B82F6',
+  red:'#EF4444',grn:'#10B981',glass:'rgba(15,22,40,.95)'
+};
+
+// ─── DOM helper ─────────────────────────────────────────────
+function h(tag,props,...ch){
+  const el=document.createElement(tag);
+  if(props)Object.entries(props).forEach(([k,v])=>{
+    if(k==='style'&&typeof v==='object')Object.assign(el.style,v);
+    else if(k.startsWith('on'))el[k]=v;
+    else if(k==='className')el.className=v;
+    else if(k==='innerHTML')el.innerHTML=v;
+    else el.setAttribute(k,v);
+  });
+  ch.flat(9).forEach(c=>{if(c==null||c===false)return;if(typeof c==='string'||typeof c==='number')el.appendChild(document.createTextNode(String(c)));else el.appendChild(c);});
+  return el;
+}
+
+// ─── API calls ──────────────────────────────────────────────
+async function api(method, path, body){
+  const opts = {method, headers:{'Content-Type':'application/json'}};
+  if(TOKEN) opts.headers['Authorization'] = 'Bearer '+TOKEN;
+  if(body) opts.body = JSON.stringify(body);
+  const res = await fetch(API+path, opts);
+  const data = await res.json();
+  if(!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+// ─── Persist session ────────────────────────────────────────
+function saveSession(){try{localStorage.setItem('fiq_token',TOKEN);localStorage.setItem('fiq_user',JSON.stringify(USER));}catch(e){}}
+function loadSession(){try{TOKEN=localStorage.getItem('fiq_token');const u=localStorage.getItem('fiq_user');if(u)USER=JSON.parse(u);}catch(e){}}
+function clearSession(){TOKEN=null;USER=null;try{localStorage.removeItem('fiq_token');localStorage.removeItem('fiq_user');}catch(e){}}
+
+// ─── Render router ──────────────────────────────────────────
+function render(){
+  const app=document.getElementById('app');
+  app.innerHTML='';
+  if(VIEW==='login') renderLogin(app);
+  else if(VIEW==='register') renderRegister(app);
+  else if(VIEW==='verify2fa') renderVerify2FA(app);
+  else if(VIEW==='setup2fa') renderSetup2FA(app);
+  else if(VIEW==='app') renderAppRedirect(app);
+  else if(VIEW==='admin') renderAdmin(app);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  AUTH SCREENS — shared wrapper
+// ═══════════════════════════════════════════════════════════════
+function authPage(app, content){
+  const page = h('div',{style:{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:'20px',background:'linear-gradient(135deg,#080C16 0%,#0F1628 50%,#080C16 100%)'}},
+    h('div',{style:{width:'100%',maxWidth:'400px'},className:'fu'},
+      h('div',{style:{textAlign:'center',marginBottom:'32px'}},
+        h('div',{style:{width:'56px',height:'56px',borderRadius:'16px',background:'linear-gradient(135deg,'+T.acc+','+T.acc2+')',display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:'26px',fontWeight:'700',color:'#fff',marginBottom:'12px'}},'₪'),
+        h('div',{style:{fontSize:'24px',fontWeight:'700',letterSpacing:'-0.5px'}},'FinanceIQ'),
+        h('div',{style:{fontSize:'13px',color:T.mut,marginTop:'4px'}},'Smart Money Management')
+      ),
+      content
+    )
+  );
+  app.appendChild(page);
+}
+
+function inputField(placeholder, type, value, oninput, extra){
+  return h('input',{type:type||'text',placeholder,value:value||'',
+    style:{width:'100%',padding:'14px 16px',borderRadius:'12px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontSize:'14px',marginBottom:'12px',...(extra||{})},
+    oninput});
+}
+
+function btnPrimary(text, onclick, loading){
+  return h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:'linear-gradient(135deg,'+T.acc+','+T.acc2+')',color:'#fff',fontWeight:'700',fontSize:'15px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',opacity:loading?'.7':'1'},onclick:loading?null:onclick},
+    loading?h('span',{className:'spinner'}):null, text);
+}
+
+function errBox(msg){
+  if(!msg) return null;
+  return h('div',{style:{padding:'12px 16px',borderRadius:'10px',background:T.red+'22',color:T.red,fontSize:'13px',marginBottom:'16px',fontWeight:'600',textAlign:'center'}},msg);
+}
+
+function successBox(msg){
+  if(!msg) return null;
+  return h('div',{style:{padding:'12px 16px',borderRadius:'10px',background:T.grn+'22',color:T.grn,fontSize:'13px',marginBottom:'16px',fontWeight:'600',textAlign:'center'}},msg);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LOGIN
+// ═══════════════════════════════════════════════════════════════
+function renderLogin(app){
+  let username='', password='';
+  const card = h('div',{style:{background:T.card,borderRadius:'20px',padding:'28px',border:'1px solid '+T.bdr}},
+    h('div',{style:{fontSize:'18px',fontWeight:'700',marginBottom:'4px'}},'Sign In'),
+    h('div',{style:{fontSize:'12px',color:T.mut,marginBottom:'20px'}},'Enter your credentials to continue'),
+    errBox(ERR),
+    inputField('Username','text',username,function(e){username=e.target.value;}),
+    inputField('Password','password',password,function(e){password=e.target.value;},{onkeydown:function(e){if(e.key==='Enter')doLogin();}}),
+    btnPrimary('Sign In', doLogin, LOADING),
+    h('div',{style:{textAlign:'center',marginTop:'16px',fontSize:'13px',color:T.mut}},
+      'No account? ',
+      h('button',{style:{background:'none',border:'none',color:T.acc,fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{ERR='';VIEW='register';render();}},'Create one')
+    )
+  );
+
+  async function doLogin(){
+    if(!username||!password){ERR='Please fill in all fields';render();return;}
+    ERR='';LOADING=true;render();
+    try{
+      const res = await api('POST','/login',{username,password});
+      TEMP = {user_id:res.user_id, totp_confirmed:res.totp_confirmed, username};
+      LOADING=false;
+      if(!res.totp_confirmed){
+        // User needs to set up 2FA first
+        const regRes = await api('POST','/login',{username,password});
+        // Get TOTP secret by re-registering flow — we need to show setup
+        // Actually server already returned user_id, we just go to setup
+        VIEW='setup2fa';
+      } else {
+        VIEW='verify2fa';
+      }
+      render();
+    }catch(e){
+      ERR=e.message;LOADING=false;render();
+    }
+  }
+
+  authPage(app, card);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  REGISTER
+// ═══════════════════════════════════════════════════════════════
+function renderRegister(app){
+  let username='',password='',password2='',displayName='';
+  let success=false, totpSecret='', totpUri='';
+
+  function doRender(){
+    const content = success
+      ? h('div',{style:{background:T.card,borderRadius:'20px',padding:'28px',border:'1px solid '+T.bdr}},
+          successBox('Account created! Set up 2FA below.'),
+          h('div',{style:{fontSize:'14px',fontWeight:'700',marginBottom:'12px'}},'Set up Authenticator App'),
+          h('div',{style:{fontSize:'12px',color:T.mut,marginBottom:'16px',lineHeight:'1.6'}},'Open your authenticator app (Google Authenticator, Authy, etc.) and add a new account. Enter this secret key manually:'),
+          h('div',{style:{background:T.card2,borderRadius:'10px',padding:'14px',marginBottom:'16px',textAlign:'center'}},
+            h('div',{style:{fontFamily:'monospace',fontSize:'16px',fontWeight:'700',letterSpacing:'2px',wordBreak:'break-all',color:T.acc}},totpSecret),
+            h('div',{style:{fontSize:'10px',color:T.mut,marginTop:'8px'}},'Or use this URI in your app: '+totpUri.substring(0,40)+'...')
+          ),
+          h('div',{style:{background:T.acc+'15',borderRadius:'10px',padding:'14px',marginBottom:'16px',fontSize:'12px',color:T.acc,lineHeight:'1.5'}},
+            '⏳ Your account is pending admin approval. You will be able to sign in once approved and after setting up 2FA.'),
+          h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontWeight:'700',fontSize:'14px',cursor:'pointer'},onclick:()=>{ERR='';VIEW='login';render();}},'← Back to Sign In')
+        )
+      : h('div',{style:{background:T.card,borderRadius:'20px',padding:'28px',border:'1px solid '+T.bdr}},
+          h('div',{style:{fontSize:'18px',fontWeight:'700',marginBottom:'4px'}},'Create Account'),
+          h('div',{style:{fontSize:'12px',color:T.mut,marginBottom:'20px'}},'Sign up for FinanceIQ'),
+          errBox(ERR),
+          inputField('Display name','text',displayName,function(e){displayName=e.target.value;}),
+          inputField('Username (lowercase)','text',username,function(e){username=e.target.value;}),
+          inputField('Password (6+ chars)','password',password,function(e){password=e.target.value;}),
+          inputField('Confirm password','password',password2,function(e){password2=e.target.value;}),
+          btnPrimary('Create Account', doRegister, LOADING),
+          h('div',{style:{textAlign:'center',marginTop:'16px',fontSize:'13px',color:T.mut}},
+            'Already have an account? ',
+            h('button',{style:{background:'none',border:'none',color:T.acc,fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{ERR='';VIEW='login';render();}},'Sign In')
+          )
+        );
+    app.innerHTML='';
+    authPage(app, content);
+  }
+
+  async function doRegister(){
+    if(!username||!password){ERR='Please fill all fields';doRender();return;}
+    if(password!==password2){ERR='Passwords do not match';doRender();return;}
+    ERR='';LOADING=true;doRender();
+    try{
+      const res = await api('POST','/register',{username,password,display_name:displayName||username});
+      totpSecret=res.totp_secret;totpUri=res.totp_uri;
+      success=true;LOADING=false;doRender();
+    }catch(e){ERR=e.message;LOADING=false;doRender();}
+  }
+
+  doRender();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  2FA SETUP (first time)
+// ═══════════════════════════════════════════════════════════════
+function renderSetup2FA(app){
+  let code='';
+  const card = h('div',{style:{background:T.card,borderRadius:'20px',padding:'28px',border:'1px solid '+T.bdr}},
+    h('div',{style:{fontSize:'18px',fontWeight:'700',marginBottom:'4px'}},'Set Up 2FA'),
+    h('div',{style:{fontSize:'12px',color:T.mut,marginBottom:'20px',lineHeight:'1.5'}},
+      'Your admin has assigned you a 2FA secret. Open your authenticator app and enter the code shown.'),
+    errBox(ERR),
+    h('div',{style:{fontSize:'13px',color:T.mut,marginBottom:'8px'}},'Enter 6-digit code from your authenticator:'),
+    inputField('000000','text',code,function(e){code=e.target.value.replace(/\D/g,'').slice(0,6);},{style:{textAlign:'center',fontSize:'24px',fontWeight:'700',letterSpacing:'8px',padding:'16px'}}),
+    btnPrimary('Verify & Sign In', doVerify, LOADING),
+    h('button',{style:{width:'100%',padding:'12px',marginTop:'8px',borderRadius:'10px',background:'none',border:'none',color:T.mut,fontSize:'13px',cursor:'pointer'},onclick:()=>{ERR='';VIEW='login';render();}},'← Back to Sign In')
+  );
+
+  async function doVerify(){
+    if(code.length!==6){ERR='Enter a 6-digit code';render();return;}
+    ERR='';LOADING=true;render();
+    try{
+      const res = await api('POST','/verify-2fa',{user_id:TEMP.user_id,code});
+      TOKEN=res.token;USER=res.user;saveSession();
+      LOADING=false;VIEW=USER.is_admin?'admin':'app';render();
+    }catch(e){ERR=e.message;LOADING=false;render();}
+  }
+
+  authPage(app, card);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  2FA VERIFY (returning user)
+// ═══════════════════════════════════════════════════════════════
+function renderVerify2FA(app){
+  let code='';
+
+  function doRender(){
+    const card = h('div',{style:{background:T.card,borderRadius:'20px',padding:'28px',border:'1px solid '+T.bdr}},
+      h('div',{style:{fontSize:'18px',fontWeight:'700',marginBottom:'4px'}},'Two-Factor Authentication'),
+      h('div',{style:{fontSize:'12px',color:T.mut,marginBottom:'20px'}},'Enter the 6-digit code from your authenticator app'),
+      errBox(ERR),
+      h('div',{style:{display:'flex',justifyContent:'center',marginBottom:'20px'}},
+        h('input',{type:'text',inputmode:'numeric',autocomplete:'one-time-code',maxLength:'6',placeholder:'------',value:code,
+          style:{width:'200px',textAlign:'center',fontSize:'28px',fontWeight:'700',letterSpacing:'10px',padding:'16px',
+            borderRadius:'14px',background:T.card2,border:'2px solid '+T.bdr,color:T.txt},
+          oninput:function(e){code=e.target.value.replace(/\D/g,'').slice(0,6);if(code.length===6)doVerify();},
+          onkeydown:function(e){if(e.key==='Enter')doVerify();}})
+      ),
+      btnPrimary('Verify', doVerify, LOADING),
+      h('button',{style:{width:'100%',padding:'12px',marginTop:'8px',borderRadius:'10px',background:'none',border:'none',color:T.mut,fontSize:'13px',cursor:'pointer'},onclick:()=>{ERR='';VIEW='login';render();}},'← Back to Sign In')
+    );
+    app.innerHTML='';
+    authPage(app, card);
+  }
+
+  async function doVerify(){
+    if(code.length!==6){ERR='Enter a 6-digit code';doRender();return;}
+    ERR='';LOADING=true;doRender();
+    try{
+      const res = await api('POST','/verify-2fa',{user_id:TEMP.user_id,code});
+      TOKEN=res.token;USER=res.user;saveSession();
+      LOADING=false;VIEW=USER.is_admin?'admin':'app';render();
+    }catch(e){ERR=e.message;LOADING=false;doRender();}
+  }
+
+  doRender();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  APP REDIRECT (loads the finance app iframe or inline)
+// ═══════════════════════════════════════════════════════════════
+function renderAppRedirect(app){
+  // Full finance app — simplified version that uses the API
+  app.innerHTML='';
+  const page = h('div',{style:{minHeight:'100vh',background:T.bg}});
+
+  // Header
+  page.appendChild(h('div',{style:{background:T.glass,borderBottom:'1px solid '+T.bdr,padding:'calc(var(--st) + 10px) 16px 12px',display:'flex',alignItems:'center',justifyContent:'space-between',backdropFilter:'blur(16px)'}},
+    h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},
+      h('div',{style:{width:'34px',height:'34px',borderRadius:'10px',background:'linear-gradient(135deg,'+T.acc+','+T.acc2+')',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'16px',fontWeight:'700',color:'#fff'}},'₪'),
+      h('div',{},
+        h('div',{style:{fontSize:'16px',fontWeight:'700'}},'FinanceIQ'),
+        h('div',{style:{fontSize:'10px',color:T.mut}},'Welcome, '+(USER?.display_name||USER?.username||'User'))
+      )
+    ),
+    h('div',{style:{display:'flex',gap:'8px'}},
+      USER?.is_admin?h('button',{style:{padding:'6px 12px',borderRadius:'8px',background:T.acc2+'22',border:'1px solid '+T.acc2+'44',color:T.acc2,fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:()=>{VIEW='admin';render();}},'Admin'):null,
+      h('button',{style:{padding:'6px 12px',borderRadius:'8px',background:T.red+'22',border:'1px solid '+T.red+'44',color:T.red,fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:()=>{clearSession();VIEW='login';render();}},'Sign Out')
+    )
+  ));
+
+  // Main content
+  const main = h('div',{style:{padding:'20px 16px calc(20px + var(--sb))',maxWidth:'600px',margin:'0 auto'},className:'fu'});
+
+  main.appendChild(h('div',{style:{background:T.card,borderRadius:'16px',padding:'24px',border:'1px solid '+T.bdr,textAlign:'center',marginBottom:'16px'}},
+    h('div',{style:{fontSize:'40px',marginBottom:'12px'}},'✓'),
+    h('div',{style:{fontSize:'18px',fontWeight:'700',color:T.grn,marginBottom:'6px'}},'You\'re In!'),
+    h('div',{style:{fontSize:'13px',color:T.mut,lineHeight:'1.6',maxWidth:'340px',margin:'0 auto'}},
+      'You are securely logged in with 2FA. Your financial data is protected. The full FinanceIQ dashboard, analytics, AI agent, and all features are available through this authenticated session.'
+    )
+  ));
+
+  // Quick info cards
+  const info = [
+    {icon:'📊',title:'Dashboard',desc:'View spending analytics, charts, and forecasts'},
+    {icon:'⬆',title:'Upload CSV',desc:'Import bank statements securely'},
+    {icon:'✦',title:'AI Agent',desc:'Get personalized financial advice'},
+    {icon:'🎯',title:'Goals',desc:'Track your savings goals'},
+    {icon:'📅',title:'History',desc:'12-month spending log'},
+    {icon:'⚠',title:'Alerts',desc:'Duplicate & ghost subscription detection'},
+  ];
+  info.forEach(i=>{
+    main.appendChild(h('div',{style:{background:T.card,borderRadius:'14px',padding:'16px',border:'1px solid '+T.bdr,marginBottom:'10px',display:'flex',alignItems:'center',gap:'14px'}},
+      h('div',{style:{width:'44px',height:'44px',borderRadius:'12px',background:T.card2,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'20px',flexShrink:'0'}},i.icon),
+      h('div',{},h('div',{style:{fontSize:'14px',fontWeight:'700'}},i.title),h('div',{style:{fontSize:'12px',color:T.mut}},i.desc))
+    ));
+  });
+
+  main.appendChild(h('div',{style:{textAlign:'center',padding:'20px',fontSize:'11px',color:T.mut}},
+    'Session expires in 24 hours · Secured with TOTP 2FA'
+  ));
+
+  page.appendChild(main);
+  app.appendChild(page);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ADMIN PANEL
+// ═══════════════════════════════════════════════════════════════
+async function renderAdmin(app){
+  app.innerHTML='';
+  const page = h('div',{style:{minHeight:'100vh',background:T.bg}});
+
+  // Header
+  page.appendChild(h('div',{style:{background:T.glass,borderBottom:'1px solid '+T.bdr,padding:'calc(var(--st) + 10px) 16px 12px',display:'flex',alignItems:'center',justifyContent:'space-between',backdropFilter:'blur(16px)'}},
+    h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},
+      h('div',{style:{width:'34px',height:'34px',borderRadius:'10px',background:'linear-gradient(135deg,'+T.red+','+T.acc+')',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'14px',fontWeight:'700',color:'#fff'}},'⚙'),
+      h('div',{},h('div',{style:{fontSize:'16px',fontWeight:'700'}},'Admin Panel'),h('div',{style:{fontSize:'10px',color:T.mut}},'User Management'))
+    ),
+    h('div',{style:{display:'flex',gap:'8px'}},
+      h('button',{style:{padding:'6px 12px',borderRadius:'8px',background:T.acc+'22',border:'1px solid '+T.acc+'44',color:T.acc,fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:()=>{VIEW='app';render();}},'App'),
+      h('button',{style:{padding:'6px 12px',borderRadius:'8px',background:T.red+'22',border:'1px solid '+T.red+'44',color:T.red,fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:()=>{clearSession();VIEW='login';render();}},'Sign Out')
+    )
+  ));
+
+  const main = h('div',{style:{padding:'20px 16px calc(20px + var(--sb))',maxWidth:'700px',margin:'0 auto'},className:'fu'});
+
+  // Load users
+  let users = [];
+  try { users = await api('GET','/admin/users'); } catch(e){ main.appendChild(errBox(e.message)); }
+
+  const pending = users.filter(u=>!u.is_approved);
+  const active = users.filter(u=>u.is_approved&&u.is_active);
+  const inactive = users.filter(u=>u.is_approved&&!u.is_active);
+
+  // Stats
+  main.appendChild(h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'10px',marginBottom:'20px'}},
+    h('div',{style:{background:T.card,borderRadius:'14px',padding:'14px',border:'1px solid '+T.bdr,textAlign:'center'}},
+      h('div',{style:{fontSize:'24px',fontWeight:'700',color:T.grn}},String(active.length)),
+      h('div',{style:{fontSize:'10px',color:T.mut,marginTop:'2px'}},'Active')),
+    h('div',{style:{background:T.card,borderRadius:'14px',padding:'14px',border:'1px solid '+T.bdr,textAlign:'center'}},
+      h('div',{style:{fontSize:'24px',fontWeight:'700',color:T.acc}},String(pending.length)),
+      h('div',{style:{fontSize:'10px',color:T.mut,marginTop:'2px'}},'Pending')),
+    h('div',{style:{background:T.card,borderRadius:'14px',padding:'14px',border:'1px solid '+T.bdr,textAlign:'center'}},
+      h('div',{style:{fontSize:'24px',fontWeight:'700',color:T.red}},String(inactive.length)),
+      h('div',{style:{fontSize:'10px',color:T.mut,marginTop:'2px'}},'Inactive'))
+  ));
+
+  // Pending approvals
+  if(pending.length){
+    main.appendChild(h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'10px',color:T.acc,display:'flex',alignItems:'center',gap:'8px'}},
+      h('span',{style:{width:'8px',height:'8px',borderRadius:'99px',background:T.acc,display:'inline-block'}}), 'Pending Approval ('+pending.length+')'));
+    pending.forEach(u=>main.appendChild(userCard(u,'pending')));
+  }
+
+  // Active users
+  main.appendChild(h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'10px',marginTop:'16px',color:T.grn,display:'flex',alignItems:'center',gap:'8px'}},
+    h('span',{style:{width:'8px',height:'8px',borderRadius:'99px',background:T.grn,display:'inline-block'}}), 'Active Users ('+active.length+')'));
+  active.forEach(u=>main.appendChild(userCard(u,'active')));
+
+  // Inactive
+  if(inactive.length){
+    main.appendChild(h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'10px',marginTop:'16px',color:T.red,display:'flex',alignItems:'center',gap:'8px'}},
+      h('span',{style:{width:'8px',height:'8px',borderRadius:'99px',background:T.red,display:'inline-block'}}), 'Inactive ('+inactive.length+')'));
+    inactive.forEach(u=>main.appendChild(userCard(u,'inactive')));
+  }
+
+  page.appendChild(main);
+  app.appendChild(page);
+}
+
+function userCard(u, status){
+  const isAdmin = u.is_admin;
+  const card = h('div',{style:{background:T.card,borderRadius:'14px',padding:'14px',border:'1px solid '+T.bdr,marginBottom:'10px'}},
+    h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}},
+      h('div',{},
+        h('div',{style:{fontSize:'14px',fontWeight:'700',display:'flex',alignItems:'center',gap:'6px'}},
+          u.display_name||u.username,
+          isAdmin?h('span',{style:{fontSize:'9px',padding:'2px 8px',borderRadius:'99px',background:T.acc2+'22',color:T.acc2,fontWeight:'700'}},'ADMIN'):null,
+          u.totp_confirmed?h('span',{style:{fontSize:'9px',padding:'2px 8px',borderRadius:'99px',background:T.grn+'22',color:T.grn,fontWeight:'700'}},'2FA ✓'):h('span',{style:{fontSize:'9px',padding:'2px 8px',borderRadius:'99px',background:T.red+'22',color:T.red,fontWeight:'700'}},'No 2FA')
+        ),
+        h('div',{style:{fontSize:'11px',color:T.mut,marginTop:'2px'}},'@'+u.username+' · Joined '+u.created_at?.split('T')[0]+(u.last_login?' · Last login: '+u.last_login.split('T')[0]:''))
+      ),
+      status==='pending'?h('div',{style:{width:'10px',height:'10px',borderRadius:'99px',background:T.acc}}):
+      status==='active'?h('div',{style:{width:'10px',height:'10px',borderRadius:'99px',background:T.grn}}):
+      h('div',{style:{width:'10px',height:'10px',borderRadius:'99px',background:T.red}})
+    )
+  );
+
+  if(!isAdmin){
+    const actions = h('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap'}});
+
+    if(status==='pending'){
+      actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:T.grn,color:'#fff',fontWeight:'700',fontSize:'11px',cursor:'pointer'},
+        onclick:async()=>{try{await api('POST','/admin/approve',{user_id:u.id});VIEW='admin';render();}catch(e){alert(e.message);}}},'✓ Approve'));
+    }
+    if(status==='active'){
+      actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:T.red+'22',border:'1px solid '+T.red+'44',color:T.red,fontWeight:'700',fontSize:'11px',cursor:'pointer'},
+        onclick:async()=>{if(confirm('Deactivate '+u.username+'?')){try{await api('POST','/admin/deactivate',{user_id:u.id});VIEW='admin';render();}catch(e){alert(e.message);}}}},'Deactivate'));
+    }
+    if(status==='inactive'){
+      actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:T.grn+'22',border:'1px solid '+T.grn+'44',color:T.grn,fontWeight:'700',fontSize:'11px',cursor:'pointer'},
+        onclick:async()=>{try{await api('POST','/admin/activate',{user_id:u.id});VIEW='admin';render();}catch(e){alert(e.message);}}},'Activate'));
+    }
+
+    // Reset password
+    actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontWeight:'600',fontSize:'11px',cursor:'pointer'},
+      onclick:async()=>{const np=prompt('New password for '+u.username+' (6+ chars):');if(np&&np.length>=6){try{const r=await api('POST','/admin/reset-password',{user_id:u.id,new_password:np});alert('Password reset. New 2FA secret: '+r.totp_secret+'\n\nShare this with the user to set up their authenticator app.');}catch(e){alert(e.message);}}}},'Reset Password'));
+
+    // Reset 2FA
+    actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontWeight:'600',fontSize:'11px',cursor:'pointer'},
+      onclick:async()=>{if(confirm('Reset 2FA for '+u.username+'?')){try{const r=await api('POST','/admin/reset-2fa',{user_id:u.id});alert('2FA reset. New secret: '+r.totp_secret+'\n\nShare with user for their authenticator app.');}catch(e){alert(e.message);}}}},'Reset 2FA'));
+
+    card.appendChild(actions);
+  }
+
+  return card;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════════════════
+loadSession();
+if(TOKEN && USER){
+  // Verify session is still valid
+  api('GET','/me').then(res=>{
+    USER = res;
+    VIEW = USER.is_admin ? 'admin' : 'app';
+    render();
+  }).catch(()=>{
+    clearSession();
+    VIEW = 'login';
+    render();
+  });
+} else {
+  VIEW = 'login';
+  render();
+}
+</script>
+</body>
+</html>

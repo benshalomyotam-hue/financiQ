@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: financeiq
+    runtime: python
+    buildCommand: echo "No build needed"
+    startCommand: python3 server.py
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ADMIN_PASS
+        sync: false
+    disk:
+      name: financeiq-data
+      mountPath: /data
+      sizeGB: 1
