@@ -185,9 +185,6 @@ def init_db():
         print(f"  ADMIN ACCOUNT CREATED")
         print(f"  Username: {ADMIN_USER}")
         print(f"  Password: {ADMIN_PASS}")
-        print(f"  TOTP Secret: {totp_secret}")
-        print(f"  Add to authenticator app using this secret")
-        print(f"  URI: {get_totp_uri(totp_secret, ADMIN_USER)}")
         print(f"{'='*60}\n")
     conn.commit()
     conn.close()
@@ -362,12 +359,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
             )
             conn.commit()
             conn.close()
-            totp_uri = get_totp_uri(totp_secret, username)
             return self.send_json({
                 "ok": True,
-                "message": "Account created. Waiting for admin approval.",
-                "totp_secret": totp_secret,
-                "totp_uri": totp_uri
+                "message": "Account created. Waiting for admin approval."
             })
 
         elif path == "/api/login":
@@ -375,38 +369,18 @@ class Handler(http.server.BaseHTTPRequestHandler):
             password = body.get("password", "")
             conn = get_db()
             user = conn.execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
-            conn.close()
             if not user or not verify_password(password, user["password_hash"]):
+                conn.close()
                 return self.send_json({"error": "Invalid username or password"}, 401)
             if not user["is_approved"]:
+                conn.close()
                 return self.send_json({"error": "Account pending admin approval"}, 403)
             if not user["is_active"]:
+                conn.close()
                 return self.send_json({"error": "Account is deactivated"}, 403)
-            # Return pending 2FA - don't create session yet
-            return self.send_json({
-                "requires_2fa": True,
-                "user_id": user["id"],
-                "totp_confirmed": bool(user["totp_confirmed"])
-            })
-
-        elif path == "/api/verify-2fa":
-            user_id = body.get("user_id")
-            totp_code = body.get("code", "").strip()
-            conn = get_db()
-            user = conn.execute("SELECT * FROM users WHERE id=?", (user_id,)).fetchone()
-            if not user:
-                conn.close()
-                return self.send_json({"error": "User not found"}, 404)
-            if not verify_totp(user["totp_secret"], totp_code):
-                conn.close()
-                return self.send_json({"error": "Invalid 2FA code"}, 401)
-            # Mark TOTP as confirmed on first successful verification
-            if not user["totp_confirmed"]:
-                conn.execute("UPDATE users SET totp_confirmed=1 WHERE id=?", (user_id,))
-            conn.execute("UPDATE users SET last_login=datetime('now') WHERE id=?", (user_id,))
+            conn.execute("UPDATE users SET last_login=datetime('now') WHERE id=?", (user["id"],))
             conn.commit()
             conn.close()
-            # Create session token
             token = sign_token({
                 "uid": user["id"],
                 "user": user["username"],

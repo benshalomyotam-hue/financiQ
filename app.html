@@ -25,15 +25,14 @@ input,button,textarea,select{font-family:'Alef',sans-serif;-webkit-appearance:no
 <div id="app"></div>
 <script>
 /* ═══════════════════════════════════════════════════════════════
-   financiQ — Full Auth Frontend
-   Login → 2FA → App / Admin Panel
+   financiQ — Auth Frontend
+   Login → App / Admin Panel
    ═══════════════════════════════════════════════════════════════ */
 
 const API = location.origin + '/api';
 let TOKEN = null;
 let USER = null;
-let VIEW = 'login'; // login | register | verify2fa | setup2fa | app | admin
-let TEMP = {}; // temporary state for login flow
+let VIEW = 'login'; // login | register | app | admin
 let ERR = '';
 let LOADING = false;
 
@@ -80,8 +79,6 @@ function render(){
   app.innerHTML='';
   if(VIEW==='login') renderLogin(app);
   else if(VIEW==='register') renderRegister(app);
-  else if(VIEW==='verify2fa') renderVerify2FA(app);
-  else if(VIEW==='setup2fa') renderSetup2FA(app);
   else if(VIEW==='app') renderAppRedirect(app);
   else if(VIEW==='admin') renderAdmin(app);
 }
@@ -147,18 +144,8 @@ function renderLogin(app){
     ERR='';LOADING=true;render();
     try{
       const res = await api('POST','/login',{username,password});
-      TEMP = {user_id:res.user_id, totp_confirmed:res.totp_confirmed, username};
-      LOADING=false;
-      if(!res.totp_confirmed){
-        // User needs to set up 2FA first
-        const regRes = await api('POST','/login',{username,password});
-        // Get TOTP secret by re-registering flow — we need to show setup
-        // Actually server already returned user_id, we just go to setup
-        VIEW='setup2fa';
-      } else {
-        VIEW='verify2fa';
-      }
-      render();
+      TOKEN=res.token;USER=res.user;saveSession();
+      LOADING=false;VIEW=USER.is_admin?'admin':'app';render();
     }catch(e){
       ERR=e.message;LOADING=false;render();
     }
@@ -172,20 +159,14 @@ function renderLogin(app){
 // ═══════════════════════════════════════════════════════════════
 function renderRegister(app){
   let username='',password='',password2='',displayName='';
-  let success=false, totpSecret='', totpUri='';
+  let success=false;
 
   function doRender(){
     const content = success
       ? h('div',{style:{background:T.card,borderRadius:'20px',padding:'28px',border:'1px solid '+T.bdr}},
-          successBox('Account created! Set up 2FA below.'),
-          h('div',{style:{fontSize:'14px',fontWeight:'700',marginBottom:'12px'}},'Set up Authenticator App'),
-          h('div',{style:{fontSize:'12px',color:T.mut,marginBottom:'16px',lineHeight:'1.6'}},'Open your authenticator app (Google Authenticator, Authy, etc.) and add a new account. Enter this secret key manually:'),
-          h('div',{style:{background:T.card2,borderRadius:'10px',padding:'14px',marginBottom:'16px',textAlign:'center'}},
-            h('div',{style:{fontFamily:'monospace',fontSize:'16px',fontWeight:'700',letterSpacing:'2px',wordBreak:'break-all',color:T.acc}},totpSecret),
-            h('div',{style:{fontSize:'10px',color:T.mut,marginTop:'8px'}},'Or use this URI in your app: '+totpUri.substring(0,40)+'...')
-          ),
+          successBox('Account created!'),
           h('div',{style:{background:T.acc+'15',borderRadius:'10px',padding:'14px',marginBottom:'16px',fontSize:'12px',color:T.acc,lineHeight:'1.5'}},
-            '⏳ Your account is pending admin approval. You will be able to sign in once approved and after setting up 2FA.'),
+            '⏳ Your account is pending admin approval. You will be able to sign in once approved.'),
           h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontWeight:'700',fontSize:'14px',cursor:'pointer'},onclick:()=>{ERR='';VIEW='login';render();}},'← Back to Sign In')
         )
       : h('div',{style:{background:T.card,borderRadius:'20px',padding:'28px',border:'1px solid '+T.bdr}},
@@ -212,75 +193,7 @@ function renderRegister(app){
     ERR='';LOADING=true;doRender();
     try{
       const res = await api('POST','/register',{username,password,display_name:displayName||username});
-      totpSecret=res.totp_secret;totpUri=res.totp_uri;
       success=true;LOADING=false;doRender();
-    }catch(e){ERR=e.message;LOADING=false;doRender();}
-  }
-
-  doRender();
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  2FA SETUP (first time)
-// ═══════════════════════════════════════════════════════════════
-function renderSetup2FA(app){
-  let code='';
-  const card = h('div',{style:{background:T.card,borderRadius:'20px',padding:'28px',border:'1px solid '+T.bdr}},
-    h('div',{style:{fontSize:'18px',fontWeight:'700',marginBottom:'4px'}},'Set Up 2FA'),
-    h('div',{style:{fontSize:'12px',color:T.mut,marginBottom:'20px',lineHeight:'1.5'}},
-      'Your admin has assigned you a 2FA secret. Open your authenticator app and enter the code shown.'),
-    errBox(ERR),
-    h('div',{style:{fontSize:'13px',color:T.mut,marginBottom:'8px'}},'Enter 6-digit code from your authenticator:'),
-    inputField('000000','text',code,function(e){code=e.target.value.replace(/\D/g,'').slice(0,6);},{style:{textAlign:'center',fontSize:'24px',fontWeight:'700',letterSpacing:'8px',padding:'16px'}}),
-    btnPrimary('Verify & Sign In', doVerify, LOADING),
-    h('button',{style:{width:'100%',padding:'12px',marginTop:'8px',borderRadius:'10px',background:'none',border:'none',color:T.mut,fontSize:'13px',cursor:'pointer'},onclick:()=>{ERR='';VIEW='login';render();}},'← Back to Sign In')
-  );
-
-  async function doVerify(){
-    if(code.length!==6){ERR='Enter a 6-digit code';render();return;}
-    ERR='';LOADING=true;render();
-    try{
-      const res = await api('POST','/verify-2fa',{user_id:TEMP.user_id,code});
-      TOKEN=res.token;USER=res.user;saveSession();
-      LOADING=false;VIEW=USER.is_admin?'admin':'app';render();
-    }catch(e){ERR=e.message;LOADING=false;render();}
-  }
-
-  authPage(app, card);
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  2FA VERIFY (returning user)
-// ═══════════════════════════════════════════════════════════════
-function renderVerify2FA(app){
-  let code='';
-
-  function doRender(){
-    const card = h('div',{style:{background:T.card,borderRadius:'20px',padding:'28px',border:'1px solid '+T.bdr}},
-      h('div',{style:{fontSize:'18px',fontWeight:'700',marginBottom:'4px'}},'Two-Factor Authentication'),
-      h('div',{style:{fontSize:'12px',color:T.mut,marginBottom:'20px'}},'Enter the 6-digit code from your authenticator app'),
-      errBox(ERR),
-      h('div',{style:{display:'flex',justifyContent:'center',marginBottom:'20px'}},
-        h('input',{type:'text',inputmode:'numeric',autocomplete:'one-time-code',maxLength:'6',placeholder:'------',value:code,
-          style:{width:'200px',textAlign:'center',fontSize:'28px',fontWeight:'700',letterSpacing:'10px',padding:'16px',
-            borderRadius:'14px',background:T.card2,border:'2px solid '+T.bdr,color:T.txt},
-          oninput:function(e){code=e.target.value.replace(/\D/g,'').slice(0,6);if(code.length===6)doVerify();},
-          onkeydown:function(e){if(e.key==='Enter')doVerify();}})
-      ),
-      btnPrimary('Verify', doVerify, LOADING),
-      h('button',{style:{width:'100%',padding:'12px',marginTop:'8px',borderRadius:'10px',background:'none',border:'none',color:T.mut,fontSize:'13px',cursor:'pointer'},onclick:()=>{ERR='';VIEW='login';render();}},'← Back to Sign In')
-    );
-    app.innerHTML='';
-    authPage(app, card);
-  }
-
-  async function doVerify(){
-    if(code.length!==6){ERR='Enter a 6-digit code';doRender();return;}
-    ERR='';LOADING=true;doRender();
-    try{
-      const res = await api('POST','/verify-2fa',{user_id:TEMP.user_id,code});
-      TOKEN=res.token;USER=res.user;saveSession();
-      LOADING=false;VIEW=USER.is_admin?'admin':'app';render();
     }catch(e){ERR=e.message;LOADING=false;doRender();}
   }
 
@@ -317,7 +230,7 @@ function renderAppRedirect(app){
     h('div',{style:{fontSize:'40px',marginBottom:'12px'}},'✓'),
     h('div',{style:{fontSize:'18px',fontWeight:'700',color:T.grn,marginBottom:'6px'}},'You\'re In!'),
     h('div',{style:{fontSize:'13px',color:T.mut,lineHeight:'1.6',maxWidth:'340px',margin:'0 auto'}},
-      'You are securely logged in with 2FA. Your financial data is protected. The full financiQ dashboard, analytics, AI agent, and all features are available through this authenticated session.'
+      'You are securely logged in. Your financial data is protected. The full financiQ dashboard, analytics, AI agent, and all features are available through this authenticated session.'
     )
   ));
 
@@ -338,7 +251,7 @@ function renderAppRedirect(app){
   });
 
   main.appendChild(h('div',{style:{textAlign:'center',padding:'20px',fontSize:'11px',color:T.mut}},
-    'Session expires in 24 hours · Secured with TOTP 2FA'
+    'Session expires in 24 hours'
   ));
 
   page.appendChild(main);
@@ -417,8 +330,7 @@ function userCard(u, status){
       h('div',{},
         h('div',{style:{fontSize:'14px',fontWeight:'700',display:'flex',alignItems:'center',gap:'6px'}},
           u.display_name||u.username,
-          isAdmin?h('span',{style:{fontSize:'9px',padding:'2px 8px',borderRadius:'99px',background:T.acc2+'22',color:T.acc2,fontWeight:'700'}},'ADMIN'):null,
-          u.totp_confirmed?h('span',{style:{fontSize:'9px',padding:'2px 8px',borderRadius:'99px',background:T.grn+'22',color:T.grn,fontWeight:'700'}},'2FA ✓'):h('span',{style:{fontSize:'9px',padding:'2px 8px',borderRadius:'99px',background:T.red+'22',color:T.red,fontWeight:'700'}},'No 2FA')
+          isAdmin?h('span',{style:{fontSize:'9px',padding:'2px 8px',borderRadius:'99px',background:T.acc2+'22',color:T.acc2,fontWeight:'700'}},'ADMIN'):null
         ),
         h('div',{style:{fontSize:'11px',color:T.mut,marginTop:'2px'}},'@'+u.username+' · Joined '+u.created_at?.split('T')[0]+(u.last_login?' · Last login: '+u.last_login.split('T')[0]:''))
       ),
@@ -446,11 +358,7 @@ function userCard(u, status){
 
     // Reset password
     actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontWeight:'600',fontSize:'11px',cursor:'pointer'},
-      onclick:async()=>{const np=prompt('New password for '+u.username+' (6+ chars):');if(np&&np.length>=6){try{const r=await api('POST','/admin/reset-password',{user_id:u.id,new_password:np});alert('Password reset. New 2FA secret: '+r.totp_secret+'\n\nShare this with the user to set up their authenticator app.');}catch(e){alert(e.message);}}}},'Reset Password'));
-
-    // Reset 2FA
-    actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontWeight:'600',fontSize:'11px',cursor:'pointer'},
-      onclick:async()=>{if(confirm('Reset 2FA for '+u.username+'?')){try{const r=await api('POST','/admin/reset-2fa',{user_id:u.id});alert('2FA reset. New secret: '+r.totp_secret+'\n\nShare with user for their authenticator app.');}catch(e){alert(e.message);}}}},'Reset 2FA'));
+      onclick:async()=>{const np=prompt('New password for '+u.username+' (6+ chars):');if(np&&np.length>=6){try{await api('POST','/admin/reset-password',{user_id:u.id,new_password:np});alert('Password reset successfully.');}catch(e){alert(e.message);}}}},'Reset Password'));
 
     card.appendChild(actions);
   }
