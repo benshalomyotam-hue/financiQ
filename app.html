@@ -8,224 +8,165 @@
 <meta name="apple-mobile-web-app-title" content="financiQ">
 <meta name="theme-color" content="#080C16">
 <title>financiQ</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
 <style>
-:root{--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px);--sl:env(safe-area-inset-left,0px);--sr:env(safe-area-inset-right,0px)}
+:root{--bg:#080C16;--card:#0F1628;--card2:#161E34;--bdr:#1C2747;--txt:#E2E8F0;--mut:#5A6A8A;--acc:#F59E0B;--acc2:#3B82F6;--red:#EF4444;--grn:#10B981;--glass:rgba(15,22,40,.95);--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)}
+.light{--bg:#F8FAFC;--card:#FFFFFF;--card2:#F1F5F9;--bdr:#E2E8F0;--txt:#1E293B;--mut:#64748B;--acc:#F59E0B;--acc2:#3B82F6;--red:#EF4444;--grn:#10B981;--glass:rgba(248,250,252,.95)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{font-family:'Alef',sans-serif;background:#080C16;color:#E2E8F0;min-height:100vh;overscroll-behavior:none}
+html,body{font-family:'Alef',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overscroll-behavior:none;transition:background .3s,color .3s}
 input,button,textarea,select{font-family:'Alef',sans-serif;-webkit-appearance:none;border:none;outline:none}
-::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#1C2747;border-radius:3px}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px}
 @keyframes fu{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 .fu{animation:fu .35s ease forwards}
-.spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
-
-/* Responsive layout */
-@media(min-width:768px){
-  .desktop-sidebar{display:flex!important}
-  .mobile-nav{display:none!important}
-  .main-with-sidebar{margin-left:260px!important}
-}
-@media(max-width:767px){
-  .desktop-sidebar{display:none!important}
-  .mobile-nav{display:flex!important}
-  .main-with-sidebar{margin-left:0!important}
-}
-
-/* Tour overlay */
-.tour-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(8,12,22,.92);z-index:9999;display:flex;align-items:center;justify-content:center;animation:fadeIn .3s ease;backdrop-filter:blur(8px)}
-.tour-card{background:#0F1628;border-radius:24px;padding:36px;max-width:440px;width:90%;border:1px solid #1C2747;animation:slideUp .4s ease;position:relative;overflow:hidden}
-.tour-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#F59E0B,#3B82F6)}
-
-/* Password toggle */
-.pw-wrap{position:relative;width:100%}
-.pw-wrap input{width:100%;padding-right:48px}
-.pw-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:#5A6A8A;cursor:pointer;font-size:16px;padding:4px;margin-top:-6px}
+.spinner{width:20px;height:20px;border:2px solid rgba(128,128,128,.3);border-top-color:var(--acc);border-radius:50%;animation:spin .6s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
+@media(min-width:768px){.desktop-sidebar{display:flex!important}.mobile-nav{display:none!important}.main-with-sidebar{margin-left:260px!important}}
+@media(max-width:767px){.desktop-sidebar{display:none!important}.mobile-nav{display:flex!important}.main-with-sidebar{margin-left:0!important}}
+.tour-overlay,.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center;animation:fadeIn .3s;backdrop-filter:blur(8px)}
+.tour-card,.modal-card{background:var(--card);border-radius:24px;padding:32px;max-width:440px;width:90%;border:1px solid var(--bdr);animation:slideUp .4s;position:relative;overflow:hidden}
+.tour-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+.pw-wrap{position:relative;width:100%}.pw-wrap input{width:100%;padding-right:48px}
+.pw-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--mut);cursor:pointer;font-size:16px;padding:4px;margin-top:-6px}
+.chat-messages{display:flex;flex-direction:column;gap:12px;margin-bottom:16px;max-height:55vh;overflow-y:auto;padding:4px}
+.chat-msg{max-width:85%;padding:12px 16px;border-radius:16px;font-size:13px;line-height:1.6;word-wrap:break-word;white-space:pre-wrap}
+.chat-msg.user{align-self:flex-end;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border-bottom-right-radius:4px}
+.chat-msg.assistant{align-self:flex-start;background:var(--card2);color:var(--txt);border-bottom-left-radius:4px;border:1px solid var(--bdr)}
+.chat-input-wrap{display:flex;gap:8px;align-items:flex-end}
+.chat-input-wrap textarea{flex:1;padding:12px 16px;border-radius:14px;background:var(--card2);border:1px solid var(--bdr);color:var(--txt);font-size:14px;resize:none;min-height:48px;max-height:120px;font-family:'Alef',sans-serif}
+.drop-zone{border:2px dashed var(--bdr);border-radius:16px;padding:40px 20px;text-align:center;cursor:pointer;transition:all .2s}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--acc);background:rgba(245,158,11,.05)}
+.preview-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px}
+.preview-table th{background:var(--card2);padding:8px 10px;text-align:left;font-weight:700;color:var(--acc);border-bottom:1px solid var(--bdr);position:sticky;top:0}
+.preview-table td{padding:6px 10px;border-bottom:1px solid rgba(28,39,71,.2);color:var(--txt)}
+.alert-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;font-size:10px;font-weight:700}
+.tab-pills{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:16px}
+.tab-pills button{padding:8px 16px;border-radius:99px;border:1px solid var(--bdr);background:var(--card);color:var(--mut);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.tab-pills button.active{background:var(--acc);color:#fff;border-color:var(--acc)}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <script>
-/* ═══════════════════════════════════════════════════════════════
-   financiQ — Smart Money Management
-   Responsive · Bilingual (EN/HE) · Onboarding Tour
-   ═══════════════════════════════════════════════════════════════ */
+const API=location.origin+'/api';
+let TOKEN=null,USER=null,LOADING=false,ERR='';
+let VIEW='login',APP_TAB='dashboard',IS_MOBILE=window.innerWidth<768;
+let AI_HISTORY=[],THEME=localStorage.getItem('fiq_theme')||'dark';
+let INACTIVITY_TIMER=null,INACTIVITY_WARNING=false;
+window.addEventListener('resize',()=>{IS_MOBILE=window.innerWidth<768;});
+if(THEME==='light') document.documentElement.classList.add('light');
 
-const API = location.origin + '/api';
-let TOKEN = null, USER = null, LOADING = false, ERR = '';
-let VIEW = 'login'; // login | register | app | admin
-let APP_TAB = 'dashboard'; // dashboard | transactions | goals | settings
-let IS_MOBILE = window.innerWidth < 768;
-window.addEventListener('resize', () => { IS_MOBILE = window.innerWidth < 768; });
+// ─── i18n (condensed) ────────────────────────────────────
+const L={
+en:{
+appName:'financiQ',tagline:'Smart Money Management',signIn:'Sign In',signInSub:'Enter your credentials',username:'Username',password:'Password',
+noAccount:'No account?',createOne:'Create one',createAccount:'Create Account',signUpFor:'Sign up for financiQ',displayName:'Display name',
+usernamePlc:'Username (lowercase)',passwordPlc:'Password (6+ chars)',confirmPw:'Confirm password',haveAccount:'Already have an account?',signInLink:'Sign In',
+welcome:'Welcome',dashboard:'Dashboard',transactions:'Transactions',goals:'Goals',settings:'Settings',admin:'Admin',signOut:'Sign Out',
+monthExpenses:'Month Expenses',monthIncome:'Month Income',totalTx:'Total Transactions',noData:'No data yet',addTx:'Add Transaction',
+date:'Date',description:'Description',amount:'Amount',category:'Category',type:'Type',expense:'Expense',income:'Income',save:'Save',cancel:'Cancel',delete:'Delete',
+addGoal:'Add Goal',goalName:'Goal name',target:'Target',saved:'Saved',language:'Language',profile:'Profile',
+upload:'Upload',uploadCsv:'Upload CSV/XLS',uploadDesc:'Import transactions from a CSV or Excel file',selectFile:'Select File',
+mapColumns:'Map Columns',preview:'Preview',importBtn:'Import',importing:'Importing...',imported:'Imported!',rows:'rows',
+columnMapping:'Column Mapping',skipColumn:'(skip)',
+aiAgent:'AI Agent',aiDesc:'Ask about your finances',aiPlaceholder:'Ask about spending, savings tips, budget advice...',send:'Send',aiThinking:'Thinking...',
+aiWelcome:"Hi! I'm your financiQ AI assistant. Ask me anything about your finances.",
+cards:'Cards',addCard:'Add Card',cardName:'Card name',lastFour:'Last 4 digits',allCards:'All Cards',noCards:'No cards added yet',
+search:'Search',filter:'Filter',recurring:'Recurring',all:'All',
+budgetAlert:'Budget Alert',overBudget:'over budget',ofBudget:'of budget',anomaly:'Unusual Transaction',duplicate:'Possible Duplicate',
+monthlyGoal:'Monthly Goal',vsGoal:'vs goal',
+changePw:'Change Password',currentPw:'Current password',newPw:'New password',pwChanged:'Password changed!',
+exportData:'Export Data',exportDesc:'Download all your transactions as CSV',exportBtn:'Download CSV',
+deleteAccount:'Delete Account',deleteDesc:'Request account deletion. Admin will review.',deleteReason:'Reason (optional)',deleteRequest:'Request Deletion',deletePending:'Deletion request pending',
+theme:'Theme',dark:'Dark',light:'Light',
+terms:'Terms & Privacy',termsTitle:'Terms of Service & Privacy Policy',termsText:'By using financiQ, you agree that your financial data is stored securely on our servers. We do not share your data with third parties. You can request account deletion at any time. Data is encrypted in transit via HTTPS.',acceptTerms:'I Accept',
+onboardTitle:'Let\'s personalize your experience',onboardGoalQ:'What\'s your monthly expense goal?',onboardNeedQ:'What do you want from financiQ?',
+saveMoney:'Save money',monitorExpenses:'Monitor expenses',investBetter:'Invest better',reducePayments:'Reduce payments',budgetPlanning:'Budget planning',
+onboardDone:'Done!',onboardSkip:'Skip for now',
+tourWelcome:'Welcome to financiQ!',tourWelcomeText:'A quick tour to get you started.',
+tourDashboard:'Your Dashboard',tourDashboardText:'Your financial overview with expenses, income, alerts, and insights.',
+tourTransactions:'Track Transactions',tourTransactionsText:'Add expenses and income. Search, filter, and categorize.',
+tourUpload:'Import Files',tourUploadText:'Upload CSV/Excel from your bank to bulk-import transactions.',
+tourAI:'AI Advisor',tourAIText:'Chat with AI about your finances. Get personalized tips based on your real data.',
+tourGoals:'Savings Goals',tourGoalsText:'Set goals and track your progress.',
+tourSettings:'Personalize',tourSettingsText:'Language, theme, password, data export, and more.',
+tourDone:'You\'re All Set!',tourDoneText:'Start by adding your first transaction!',
+next:'Next',back:'Back',getStarted:'Get Started',skip:'Skip',
+active:'Active',pending:'Pending',inactive:'Inactive',approve:'Approve',deactivate:'Deactivate',activate:'Activate',
+resetPw:'Reset Password',userMgmt:'User Management',adminPanel:'Admin Panel',app:'App',
+globalSettings:'Global Settings',apiKey:'AI API Key',apiKeyDesc:'Global API key for AI features',currency:'Currency',
+savingSettings:'Saving...',settingsSaved:'Saved!',
+setRole:'Set Role',masterAdmin:'Master Admin',moderator:'Moderator',user:'User',
+deletionRequests:'Deletion Requests',approveDelete:'Approve Delete',rejectDelete:'Reject',
+sessionWarning:'Session expiring soon due to inactivity',stayLoggedIn:'Stay Logged In',
+fillFields:'Please fill in all fields',pwMismatch:'Passwords do not match',
+pendingApproval:'Account pending admin approval.',accountCreated:'Account created!',
+replayTour:'Replay Tour',updateOnboarding:'Update Goals',rateLimited:'Too many attempts. Try again later.',
+budgets:'Budgets',addBudget:'Add Budget',editBudget:'Edit Budget',budgetCategory:'Category',budgetAmount:'Limit',noBudgets:'No budgets set yet',removeBudget:'Remove',
+forecast:'Forecast',forecastDesc:'Projected month-end total',dailyAvg:'Daily average',daysLeft:'days left',
+momComparison:'vs Last Month',momUp:'more than last month',momDown:'less than last month',
+aiTips:'AI Tips',generateTips:'Generate Tips',
+household:'Household',createHousehold:'Create Household',joinHousehold:'Join Household',leaveHousehold:'Leave',inviteCode:'Invite Code',householdName:'Household name',householdMembers:'Members',totalSpending:'Total Spending',
+scanReceipt:'Scan Receipt',takePhoto:'Take Photo',scanning:'Scanning...',
+},
+he:{
+appName:'financiQ',tagline:'ניהול כספים חכם',signIn:'התחברות',signInSub:'הכנס את פרטי ההתחברות',username:'שם משתמש',password:'סיסמה',
+noAccount:'אין חשבון?',createOne:'צור חשבון',createAccount:'יצירת חשבון',signUpFor:'הרשם ל-financiQ',displayName:'שם תצוגה',
+usernamePlc:'שם משתמש (אותיות קטנות)',passwordPlc:'סיסמה (6+ תווים)',confirmPw:'אימות סיסמה',haveAccount:'יש לך חשבון?',signInLink:'התחבר',
+welcome:'שלום',dashboard:'לוח בקרה',transactions:'תנועות',goals:'יעדים',settings:'הגדרות',admin:'ניהול',signOut:'התנתקות',
+monthExpenses:'הוצאות החודש',monthIncome:'הכנסות החודש',totalTx:'סה"כ תנועות',noData:'אין נתונים עדיין',addTx:'הוסף תנועה',
+date:'תאריך',description:'תיאור',amount:'סכום',category:'קטגוריה',type:'סוג',expense:'הוצאה',income:'הכנסה',save:'שמור',cancel:'ביטול',delete:'מחיקה',
+addGoal:'הוסף יעד',goalName:'שם היעד',target:'יעד',saved:'נחסך',language:'שפה',profile:'פרופיל',
+upload:'העלאה',uploadCsv:'העלאת CSV/XLS',uploadDesc:'ייבוא תנועות מקובץ',selectFile:'בחר קובץ',
+mapColumns:'מיפוי עמודות',preview:'תצוגה מקדימה',importBtn:'ייבוא',importing:'מייבא...',imported:'!יובא בהצלחה',rows:'שורות',
+columnMapping:'מיפוי עמודות',skipColumn:'(דלג)',
+aiAgent:'סוכן AI',aiDesc:'שאל על הכספים שלך',aiPlaceholder:'שאל על הוצאות, טיפים לחיסכון...',send:'שלח',aiThinking:'חושב...',
+aiWelcome:'!שלום! אני עוזר ה-AI שלך. שאל אותי כל שאלה על הכספים',
+cards:'כרטיסים',addCard:'הוסף כרטיס',cardName:'שם הכרטיס',lastFour:'4 ספרות אחרונות',allCards:'כל הכרטיסים',noCards:'לא נוספו כרטיסים',
+search:'חיפוש',filter:'סינון',recurring:'קבוע',all:'הכל',
+budgetAlert:'התראת תקציב',overBudget:'חריגה מתקציב',ofBudget:'מהתקציב',anomaly:'תנועה חריגה',duplicate:'תשלום כפול אפשרי',
+monthlyGoal:'יעד חודשי',vsGoal:'מול היעד',
+changePw:'שינוי סיסמה',currentPw:'סיסמה נוכחית',newPw:'סיסמה חדשה',pwChanged:'!הסיסמה שונתה',
+exportData:'ייצוא נתונים',exportDesc:'הורד את כל התנועות כ-CSV',exportBtn:'הורד CSV',
+deleteAccount:'מחיקת חשבון',deleteDesc:'בקש מחיקת חשבון. המנהל יבדוק.',deleteReason:'סיבה (אופציונלי)',deleteRequest:'בקש מחיקה',deletePending:'בקשת מחיקה ממתינה',
+theme:'ערכת נושא',dark:'כהה',light:'בהיר',
+terms:'תנאים ופרטיות',termsTitle:'תנאי שימוש ומדיניות פרטיות',termsText:'בשימוש ב-financiQ, אתה מסכים שהנתונים הפיננסיים שלך מאוחסנים בצורה מאובטחת בשרתים שלנו. אנחנו לא משתפים מידע עם צדדים שלישיים. ניתן לבקש מחיקת חשבון בכל עת. הנתונים מוצפנים בהעברה באמצעות HTTPS.',acceptTerms:'אני מסכים',
+onboardTitle:'בואו נתאים את החוויה שלך',onboardGoalQ:'מה יעד ההוצאות החודשי שלך?',onboardNeedQ:'מה אתה רוצה מ-financiQ?',
+saveMoney:'לחסוך כסף',monitorExpenses:'לעקוב אחרי הוצאות',investBetter:'להשקיע טוב יותר',reducePayments:'להפחית תשלומים',budgetPlanning:'תכנון תקציב',
+onboardDone:'!מוכן',onboardSkip:'דלג לעת עתה',
+tourWelcome:'!financiQ-ברוכים הבאים ל',tourWelcomeText:'סיור קצר שיעזור לך להתחיל.',
+tourDashboard:'לוח הבקרה שלך',tourDashboardText:'סקירה פיננסית עם הוצאות, הכנסות, התראות ותובנות.',
+tourTransactions:'מעקב תנועות',tourTransactionsText:'הוסף הוצאות והכנסות. חפש, סנן ותייג.',
+tourUpload:'ייבוא מקבצים',tourUploadText:'העלה CSV/אקסל מהבנק לייבוא תנועות.',
+tourAI:'יועץ AI',tourAIText:'שוחח עם AI על הכספים שלך. קבל טיפים מותאמים אישית.',
+tourGoals:'יעדי חיסכון',tourGoalsText:'הגדר יעדים ועקוב אחרי ההתקדמות.',
+tourSettings:'התאמה אישית',tourSettingsText:'שפה, ערכת נושא, סיסמה, ייצוא נתונים ועוד.',
+tourDone:'!הכל מוכן',tourDoneText:'התחל בהוספת התנועה הראשונה!',
+next:'הבא',back:'חזרה',getStarted:'!בואו נתחיל',skip:'דלג',
+active:'פעילים',pending:'ממתינים',inactive:'לא פעילים',approve:'אשר',deactivate:'השבת',activate:'הפעל',
+resetPw:'איפוס סיסמה',userMgmt:'ניהול משתמשים',adminPanel:'פאנל ניהול',app:'אפליקציה',
+globalSettings:'הגדרות גלובליות',apiKey:'מפתח AI API',apiKeyDesc:'מפתח API גלובלי לפיצ\'רים של AI',currency:'מטבע',
+savingSettings:'שומר...',settingsSaved:'!נשמר',
+setRole:'קבע תפקיד',masterAdmin:'מנהל ראשי',moderator:'מנהל משנה',user:'משתמש',
+deletionRequests:'בקשות מחיקה',approveDelete:'אשר מחיקה',rejectDelete:'דחה',
+sessionWarning:'הפגישה עומדת לפוג בגלל חוסר פעילות',stayLoggedIn:'הישאר מחובר',
+fillFields:'נא למלא את כל השדות',pwMismatch:'הסיסמאות לא תואמות',
+pendingApproval:'ממתין לאישור מנהל.',accountCreated:'!החשבון נוצר',
+replayTour:'הפעל סיור',updateOnboarding:'עדכן יעדים',rateLimited:'יותר מדי ניסיונות. נסה שוב מאוחר יותר.',
+budgets:'תקציבים',addBudget:'הוסף תקציב',editBudget:'ערוך תקציב',budgetCategory:'קטגוריה',budgetAmount:'מגבלה',noBudgets:'לא הוגדרו תקציבים עדיין',removeBudget:'הסר',
+forecast:'תחזית',forecastDesc:'סך צפוי לסוף החודש',dailyAvg:'ממוצע יומי',daysLeft:'ימים נותרו',
+momComparison:'מול חודש קודם',momUp:'יותר מחודש שעבר',momDown:'פחות מחודש שעבר',
+aiTips:'טיפים מ-AI',generateTips:'צור טיפים',
+household:'משק בית',createHousehold:'צור משק בית',joinHousehold:'הצטרף למשק בית',leaveHousehold:'עזוב',inviteCode:'קוד הזמנה',householdName:'שם משק הבית',householdMembers:'חברים',totalSpending:'סה"כ הוצאות',
+scanReceipt:'סרוק קבלה',takePhoto:'צלם תמונה',scanning:'סורק...',
+}};
+function t(k){return(L[USER?.lang||'en']||L.en)[k]||L.en[k]||k;}
+function isRTL(){return(USER?.lang||'en')==='he';}
 
-// ─── i18n ────────────────────────────────────────────────────
-const LANG = {
-  en: {
-    appName: 'financiQ',
-    tagline: 'Smart Money Management',
-    signIn: 'Sign In',
-    signInSub: 'Enter your credentials to continue',
-    username: 'Username',
-    password: 'Password',
-    noAccount: 'No account?',
-    createOne: 'Create one',
-    createAccount: 'Create Account',
-    signUpFor: 'Sign up for financiQ',
-    displayName: 'Display name',
-    usernamePlc: 'Username (lowercase)',
-    passwordPlc: 'Password (6+ chars)',
-    confirmPw: 'Confirm password',
-    haveAccount: 'Already have an account?',
-    signInLink: 'Sign In',
-    welcome: 'Welcome',
-    dashboard: 'Dashboard',
-    transactions: 'Transactions',
-    goals: 'Goals',
-    settings: 'Settings',
-    admin: 'Admin',
-    signOut: 'Sign Out',
-    monthExpenses: 'Month Expenses',
-    monthIncome: 'Month Income',
-    totalTx: 'All Transactions',
-    noData: 'No data yet',
-    addTx: 'Add Transaction',
-    date: 'Date',
-    description: 'Description',
-    amount: 'Amount',
-    category: 'Category',
-    type: 'Type',
-    expense: 'Expense',
-    income: 'Income',
-    save: 'Save',
-    cancel: 'Cancel',
-    delete: 'Delete',
-    addGoal: 'Add Goal',
-    goalName: 'Goal name',
-    target: 'Target amount',
-    saved: 'Saved',
-    language: 'Language',
-    english: 'English',
-    hebrew: 'עברית',
-    profile: 'Profile',
-    apiKey: 'AI API Key',
-    apiKeyDesc: 'Set a global API key for AI features (admin only)',
-    currency: 'Currency symbol',
-    pendingApproval: 'Account pending admin approval.',
-    accountCreated: 'Account created!',
-    pwMismatch: 'Passwords do not match',
-    fillFields: 'Please fill in all fields',
-    // Tour
-    tourWelcome: 'Welcome to financiQ!',
-    tourWelcomeText: 'Let\'s take a quick tour to help you get started with managing your finances.',
-    tourDashboard: 'Your Dashboard',
-    tourDashboardText: 'This is your financial overview. You\'ll see your monthly expenses, income, and spending breakdown here.',
-    tourTransactions: 'Track Transactions',
-    tourTransactionsText: 'Add your daily expenses and income. Categorize them to see where your money goes.',
-    tourGoals: 'Set Savings Goals',
-    tourGoalsText: 'Create goals like "Vacation Fund" or "Emergency Savings" and track your progress.',
-    tourSettings: 'Personalize',
-    tourSettingsText: 'Switch between English and Hebrew, update your profile, and customize your experience.',
-    tourDone: 'You\'re All Set!',
-    tourDoneText: 'Start by adding your first transaction. You can always access this tour from Settings.',
-    next: 'Next',
-    back: 'Back',
-    getStarted: 'Get Started',
-    skip: 'Skip Tour',
-    active:'Active',pending:'Pending',inactive:'Inactive',
-    approve:'Approve',deactivate:'Deactivate',activate:'Activate',
-    resetPw:'Reset Password',userMgmt:'User Management',
-    adminPanel:'Admin Panel',app:'App',
-    globalSettings:'Global Settings',
-    savingSettings:'Saving...',settingsSaved:'Settings saved!',
-  },
-  he: {
-    appName: 'financiQ',
-    tagline: 'ניהול כספים חכם',
-    signIn: 'התחברות',
-    signInSub: 'הכנס את פרטי ההתחברות שלך',
-    username: 'שם משתמש',
-    password: 'סיסמה',
-    noAccount: 'אין לך חשבון?',
-    createOne: 'צור חשבון',
-    createAccount: 'יצירת חשבון',
-    signUpFor: 'הרשם ל-financiQ',
-    displayName: 'שם תצוגה',
-    usernamePlc: 'שם משתמש (אותיות קטנות)',
-    passwordPlc: 'סיסמה (6+ תווים)',
-    confirmPw: 'אימות סיסמה',
-    haveAccount: 'כבר יש לך חשבון?',
-    signInLink: 'התחבר',
-    welcome: 'שלום',
-    dashboard: 'לוח בקרה',
-    transactions: 'תנועות',
-    goals: 'יעדים',
-    settings: 'הגדרות',
-    admin: 'ניהול',
-    signOut: 'התנתקות',
-    monthExpenses: 'הוצאות החודש',
-    monthIncome: 'הכנסות החודש',
-    totalTx: 'כל התנועות',
-    noData: 'אין נתונים עדיין',
-    addTx: 'הוסף תנועה',
-    date: 'תאריך',
-    description: 'תיאור',
-    amount: 'סכום',
-    category: 'קטגוריה',
-    type: 'סוג',
-    expense: 'הוצאה',
-    income: 'הכנסה',
-    save: 'שמור',
-    cancel: 'ביטול',
-    delete: 'מחיקה',
-    addGoal: 'הוסף יעד',
-    goalName: 'שם היעד',
-    target: 'סכום יעד',
-    saved: 'נחסך',
-    language: 'שפה',
-    english: 'English',
-    hebrew: 'עברית',
-    profile: 'פרופיל',
-    apiKey: 'מפתח AI API',
-    apiKeyDesc: 'הגדר מפתח API גלובלי לפיצ\'רים של AI (מנהל בלבד)',
-    currency: 'סמל מטבע',
-    pendingApproval: 'החשבון ממתין לאישור מנהל.',
-    accountCreated: '!החשבון נוצר בהצלחה',
-    pwMismatch: 'הסיסמאות אינן תואמות',
-    fillFields: 'נא למלא את כל השדות',
-    tourWelcome: '!financiQ-ברוכים הבאים ל',
-    tourWelcomeText: 'בואו נעשה סיור קצר שיעזור לכם להתחיל לנהל את הכספים שלכם.',
-    tourDashboard: 'לוח הבקרה שלך',
-    tourDashboardText: 'כאן תראו סקירה כללית של המצב הפיננסי שלכם — הוצאות, הכנסות ופילוח ההוצאות החודשיות.',
-    tourTransactions: 'מעקב תנועות',
-    tourTransactionsText: 'הוסיפו הוצאות והכנסות יומיות. תייגו אותן בקטגוריות כדי לדעת לאן הכסף הולך.',
-    tourGoals: 'הגדירו יעדי חיסכון',
-    tourGoalsText: 'צרו יעדים כמו "קרן חופשה" או "חיסכון לחירום" ועקבו אחרי ההתקדמות.',
-    tourSettings: 'התאמה אישית',
-    tourSettingsText: 'עברו בין אנגלית לעברית, עדכנו את הפרופיל שלכם והתאימו את החוויה.',
-    tourDone: '!הכל מוכן',
-    tourDoneText: 'התחילו בהוספת התנועה הראשונה שלכם. תמיד אפשר לחזור לסיור הזה מההגדרות.',
-    next: 'הבא',
-    back: 'חזרה',
-    getStarted: '!בואו נתחיל',
-    skip: 'דלג על הסיור',
-    active:'פעילים',pending:'ממתינים',inactive:'לא פעילים',
-    approve:'אשר',deactivate:'השבת',activate:'הפעל',
-    resetPw:'איפוס סיסמה',userMgmt:'ניהול משתמשים',
-    adminPanel:'פאנל ניהול',app:'אפליקציה',
-    globalSettings:'הגדרות גלובליות',
-    savingSettings:'שומר...',settingsSaved:'!ההגדרות נשמרו',
-  }
-};
-function t(key){ return (LANG[USER?.lang||'en']||LANG.en)[key] || LANG.en[key] || key; }
-function isRTL(){ return (USER?.lang||'en')==='he'; }
-
-// ─── Theme ──────────────────────────────────────────────────
-const T={bg:'#080C16',card:'#0F1628',card2:'#161E34',bdr:'#1C2747',txt:'#E2E8F0',mut:'#5A6A8A',acc:'#F59E0B',acc2:'#3B82F6',red:'#EF4444',grn:'#10B981',glass:'rgba(15,22,40,.95)'};
-
-// ─── DOM helper ─────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────
 function h(tag,props,...ch){
   const el=document.createElement(tag);
   if(props)Object.entries(props).forEach(([k,v])=>{
@@ -238,642 +179,972 @@ function h(tag,props,...ch){
   ch.flat(9).forEach(c=>{if(c==null||c===false)return;if(typeof c==='string'||typeof c==='number')el.appendChild(document.createTextNode(String(c)));else el.appendChild(c);});
   return el;
 }
-
-// ─── API calls ──────────────────────────────────────────────
-async function api(method, path, body){
-  const opts={method, headers:{'Content-Type':'application/json'}};
-  if(TOKEN) opts.headers['Authorization']='Bearer '+TOKEN;
-  if(body) opts.body=JSON.stringify(body);
-  const res=await fetch(API+path, opts);
+async function api(method,path,body){
+  const opts={method,headers:{'Content-Type':'application/json'}};
+  if(TOKEN)opts.headers['Authorization']='Bearer '+TOKEN;
+  if(body)opts.body=JSON.stringify(body);
+  const res=await fetch(API+path,opts);
   const data=await res.json();
-  if(!res.ok) throw new Error(data.error||'Request failed');
+  if(!res.ok)throw new Error(data.error||'Request failed');
+  resetInactivity();
   return data;
 }
-
-// ─── Session ────────────────────────────────────────────────
 function saveSession(){try{localStorage.setItem('fiq_token',TOKEN);localStorage.setItem('fiq_user',JSON.stringify(USER));}catch(e){}}
 function loadSession(){try{TOKEN=localStorage.getItem('fiq_token');const u=localStorage.getItem('fiq_user');if(u)USER=JSON.parse(u);}catch(e){}}
-function clearSession(){TOKEN=null;USER=null;try{localStorage.removeItem('fiq_token');localStorage.removeItem('fiq_user');}catch(e){}}
+function clearSession(){TOKEN=null;USER=null;clearTimeout(INACTIVITY_TIMER);try{localStorage.removeItem('fiq_token');localStorage.removeItem('fiq_user');}catch(e){}}
 
-// ─── Render router ──────────────────────────────────────────
+// ─── Inactivity timeout ─────────────────────────────────
+function resetInactivity(){
+  clearTimeout(INACTIVITY_TIMER);
+  INACTIVITY_WARNING=false;
+  const w=document.querySelector('.inactivity-warning');if(w)w.remove();
+  if(!TOKEN)return;
+  INACTIVITY_TIMER=setTimeout(()=>{
+    INACTIVITY_WARNING=true;
+    const overlay=h('div',{className:'modal-overlay inactivity-warning'},
+      h('div',{className:'modal-card',style:{textAlign:'center'}},
+        h('div',{style:{fontSize:'40px',marginBottom:'12px'}},'⏰'),
+        h('div',{style:{fontSize:'16px',fontWeight:'700',marginBottom:'8px'}},t('sessionWarning')),
+        h('div',{style:{display:'flex',gap:'10px',marginTop:'20px'}},
+          h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontWeight:'700',cursor:'pointer'},
+            onclick:()=>{clearSession();VIEW='login';render();overlay.remove();}},t('signOut')),
+          h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},
+            onclick:()=>{api('POST','/heartbeat').catch(()=>{});overlay.remove();resetInactivity();}},t('stayLoggedIn'))
+        )));
+    document.body.appendChild(overlay);
+    // Auto-logout after 2 more minutes
+    setTimeout(()=>{if(INACTIVITY_WARNING){clearSession();VIEW='login';render();}},120000);
+  },1800000); // 30 minutes
+}
+['click','keydown','scroll','touchstart'].forEach(e=>document.addEventListener(e,()=>{if(TOKEN&&!INACTIVITY_WARNING)resetInactivity();},{passive:true}));
+
+// ─── Theme ──────────────────────────────────────────────
+function setTheme(t){THEME=t;localStorage.setItem('fiq_theme',t);document.documentElement.classList.toggle('light',t==='light');}
+
+// ─── Render router ──────────────────────────────────────
 function render(){
-  const app=document.getElementById('app');
-  app.innerHTML='';
+  const app=document.getElementById('app');app.innerHTML='';
   document.documentElement.dir=isRTL()?'rtl':'ltr';
   document.documentElement.lang=USER?.lang||'en';
-  if(VIEW==='login') renderLogin(app);
-  else if(VIEW==='register') renderRegister(app);
-  else if(VIEW==='app') renderApp(app);
-  else if(VIEW==='admin') renderAdmin(app);
+  if(VIEW==='login')renderLogin(app);
+  else if(VIEW==='register')renderRegister(app);
+  else if(VIEW==='app')renderApp(app);
+  else if(VIEW==='admin')renderAdmin(app);
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  SHARED UI COMPONENTS
-// ═══════════════════════════════════════════════════════════════
-function authPage(app, content){
-  app.appendChild(h('div',{style:{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:'20px',background:`linear-gradient(135deg,${T.bg} 0%,${T.card} 50%,${T.bg} 100%)`}},
+// ─── Shared UI ──────────────────────────────────────────
+function authPage(app,content){
+  app.appendChild(h('div',{style:{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:'20px',background:'linear-gradient(135deg,var(--bg) 0%,var(--card) 50%,var(--bg) 100%)'}},
     h('div',{style:{width:'100%',maxWidth:'400px'},className:'fu'},
       h('div',{style:{textAlign:'center',marginBottom:'32px'}},
-        h('div',{style:{width:'56px',height:'56px',borderRadius:'16px',background:`linear-gradient(135deg,${T.acc},${T.acc2})`,display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:'26px',fontWeight:'700',color:'#fff',marginBottom:'12px'}},'₪'),
+        h('div',{style:{width:'56px',height:'56px',borderRadius:'16px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:'26px',fontWeight:'700',color:'#fff',marginBottom:'12px'}},'₪'),
         h('div',{style:{fontSize:'24px',fontWeight:'700',letterSpacing:'-0.5px'}},'financiQ'),
-        h('div',{style:{fontSize:'13px',color:T.mut,marginTop:'4px'}},t('tagline'))
-      ), content)));
+        h('div',{style:{fontSize:'13px',color:'var(--mut)',marginTop:'4px'}},t('tagline'))),content)));
 }
-
-function inputField(placeholder, type, value, oninput, extraStyle){
-  return h('input',{type:type||'text',placeholder,value:value||'',
-    style:{width:'100%',padding:'14px 16px',borderRadius:'12px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontSize:'14px',marginBottom:'12px',...(extraStyle||{})},
-    oninput});
+function inputField(ph,type,val,oninput,es){return h('input',{type:type||'text',placeholder:ph,value:val||'',style:{width:'100%',padding:'14px 16px',borderRadius:'12px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontSize:'14px',marginBottom:'12px',...(es||{})},oninput});}
+function passwordField(ph,val,oninput,onkeydown){
+  const w=h('div',{className:'pw-wrap',style:{marginBottom:'12px'}});
+  const i=h('input',{type:'password',placeholder:ph,value:val||'',style:{width:'100%',padding:'14px 16px',paddingRight:'48px',borderRadius:'12px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontSize:'14px'},oninput});
+  if(onkeydown)i.onkeydown=onkeydown;
+  const b=h('button',{className:'pw-toggle',onclick:()=>{const s=i.type==='password';i.type=s?'text':'password';b.textContent=s?'🙈':'👁';}},'👁');
+  w.appendChild(i);w.appendChild(b);return w;
 }
+function btnPrimary(txt,onclick,loading){return h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',fontSize:'15px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',opacity:loading?'.7':'1'},onclick:loading?null:onclick},loading?h('span',{className:'spinner'}):null,txt);}
+function errBox(m){if(!m)return null;return h('div',{style:{padding:'12px 16px',borderRadius:'10px',background:'var(--red)',color:'#fff',fontSize:'13px',marginBottom:'16px',fontWeight:'600',textAlign:'center',opacity:'.9'}},m);}
+function successBox(m){if(!m)return null;return h('div',{style:{padding:'12px 16px',borderRadius:'10px',background:'var(--grn)',color:'#fff',fontSize:'13px',marginBottom:'16px',fontWeight:'600',textAlign:'center',opacity:'.9'}},m);}
+function statCard(label,value,color){return h('div',{style:{background:'var(--card)',borderRadius:'14px',padding:'16px',border:'1px solid var(--bdr)',textAlign:'center',flex:'1',minWidth:'0'}},h('div',{style:{fontSize:'22px',fontWeight:'700',color:color||'var(--txt)'}},value),h('div',{style:{fontSize:'11px',color:'var(--mut)',marginTop:'4px'}},label));}
 
-function passwordField(placeholder, value, oninput, onkeydown){
-  const wrap=h('div',{className:'pw-wrap',style:{marginBottom:'12px'}});
-  const inp=h('input',{type:'password',placeholder,value:value||'',
-    style:{width:'100%',padding:'14px 16px',paddingRight:'48px',borderRadius:'12px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontSize:'14px'},
-    oninput});
-  if(onkeydown) inp.onkeydown=onkeydown;
-  const toggle=h('button',{className:'pw-toggle',onclick:()=>{
-    const show=inp.type==='password';
-    inp.type=show?'text':'password';
-    toggle.textContent=show?'🙈':'👁';
-  }},'👁');
-  wrap.appendChild(inp);
-  wrap.appendChild(toggle);
-  return wrap;
-}
-
-function btnPrimary(text, onclick, loading){
-  return h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:`linear-gradient(135deg,${T.acc},${T.acc2})`,color:'#fff',fontWeight:'700',fontSize:'15px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',opacity:loading?'.7':'1'},onclick:loading?null:onclick},
-    loading?h('span',{className:'spinner'}):null, text);
-}
-
-function errBox(msg){if(!msg)return null;return h('div',{style:{padding:'12px 16px',borderRadius:'10px',background:T.red+'22',color:T.red,fontSize:'13px',marginBottom:'16px',fontWeight:'600',textAlign:'center'}},msg);}
-function successBox(msg){if(!msg)return null;return h('div',{style:{padding:'12px 16px',borderRadius:'10px',background:T.grn+'22',color:T.grn,fontSize:'13px',marginBottom:'16px',fontWeight:'600',textAlign:'center'}},msg);}
-
-function statCard(label, value, color){
-  return h('div',{style:{background:T.card,borderRadius:'14px',padding:'16px',border:'1px solid '+T.bdr,textAlign:'center',flex:'1',minWidth:'0'}},
-    h('div',{style:{fontSize:'22px',fontWeight:'700',color:color||T.txt}},value),
-    h('div',{style:{fontSize:'11px',color:T.mut,marginTop:'4px'}},label));
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  LOGIN
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════ LOGIN ═══════════════════════════
 function renderLogin(app){
-  let username='', password='';
-  const card=h('div',{style:{background:T.card,borderRadius:'20px',padding:'28px',border:'1px solid '+T.bdr}},
+  let un='',pw='';
+  const card=h('div',{style:{background:'var(--card)',borderRadius:'20px',padding:'28px',border:'1px solid var(--bdr)'}},
     h('div',{style:{fontSize:'18px',fontWeight:'700',marginBottom:'4px'}},t('signIn')),
-    h('div',{style:{fontSize:'12px',color:T.mut,marginBottom:'20px'}},t('signInSub')),
+    h('div',{style:{fontSize:'12px',color:'var(--mut)',marginBottom:'20px'}},t('signInSub')),
     errBox(ERR),
-    inputField(t('username'),'text',username,function(e){username=e.target.value;}),
-    passwordField(t('password'),password,function(e){password=e.target.value;},function(e){if(e.key==='Enter')doLogin();}),
-    btnPrimary(t('signIn'), doLogin, LOADING),
-    h('div',{style:{textAlign:'center',marginTop:'16px',fontSize:'13px',color:T.mut}},
-      t('noAccount')+' ',
-      h('button',{style:{background:'none',border:'none',color:T.acc,fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{ERR='';VIEW='register';render();}},' '+t('createOne'))
-    )
-  );
+    inputField(t('username'),'text',un,function(e){un=e.target.value;}),
+    passwordField(t('password'),pw,function(e){pw=e.target.value;},function(e){if(e.key==='Enter')doLogin();}),
+    btnPrimary(t('signIn'),doLogin,LOADING),
+    h('div',{style:{textAlign:'center',marginTop:'16px',fontSize:'13px',color:'var(--mut)'}},t('noAccount')+' ',
+      h('button',{style:{background:'none',border:'none',color:'var(--acc)',fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{ERR='';VIEW='register';render();}},t('createOne'))));
   async function doLogin(){
-    if(!username||!password){ERR=t('fillFields');render();return;}
+    if(!un||!pw){ERR=t('fillFields');render();return;}
     ERR='';LOADING=true;render();
     try{
-      const res=await api('POST','/login',{username,password});
-      TOKEN=res.token;USER=res.user;saveSession();
-      LOADING=false;VIEW=USER.is_admin?'admin':'app';render();
-      // Show tour for first-time users
-      if(!USER.tour_completed && !USER.is_admin) showTour();
+      const res=await api('POST','/login',{username:un,password:pw});
+      TOKEN=res.token;USER=res.user;saveSession();LOADING=false;
+      resetInactivity();
+      VIEW=USER.role&&(USER.role==='master_admin'||USER.role==='admin')?'admin':'app';
+      render();
+      if(!USER.terms_accepted)showTerms();
+      else if(!USER.onboarding_done)showOnboarding();
+      else if(!USER.tour_completed)showTour();
     }catch(e){ERR=e.message;LOADING=false;render();}
   }
-  authPage(app, card);
+  authPage(app,card);
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  REGISTER
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════ REGISTER ═══════════════════════════
 function renderRegister(app){
-  let username='',password='',password2='',displayName='',lang='en';
-  let success=false;
+  let un='',pw='',pw2='',dn='',lang='en',success=false;
   function doRender(){
     const content=success
-      ? h('div',{style:{background:T.card,borderRadius:'20px',padding:'28px',border:'1px solid '+T.bdr}},
-          successBox(t('accountCreated')),
-          h('div',{style:{background:T.acc+'15',borderRadius:'10px',padding:'14px',marginBottom:'16px',fontSize:'12px',color:T.acc,lineHeight:'1.5'}},
-            '⏳ '+t('pendingApproval')),
-          h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontWeight:'700',fontSize:'14px',cursor:'pointer'},onclick:()=>{ERR='';VIEW='login';render();}},'← '+t('signInLink')))
-      : h('div',{style:{background:T.card,borderRadius:'20px',padding:'28px',border:'1px solid '+T.bdr}},
-          h('div',{style:{fontSize:'18px',fontWeight:'700',marginBottom:'4px'}},t('createAccount')),
-          h('div',{style:{fontSize:'12px',color:T.mut,marginBottom:'20px'}},t('signUpFor')),
-          errBox(ERR),
-          inputField(t('displayName'),'text',displayName,function(e){displayName=e.target.value;}),
-          inputField(t('usernamePlc'),'text',username,function(e){username=e.target.value;}),
-          passwordField(t('passwordPlc'),password,function(e){password=e.target.value;}),
-          passwordField(t('confirmPw'),password2,function(e){password2=e.target.value;}),
-          // Language selector
-          h('div',{style:{display:'flex',gap:'8px',marginBottom:'16px'}},
-            h('button',{style:{flex:1,padding:'10px',borderRadius:'10px',background:lang==='en'?T.acc2+'33':T.card2,border:'1px solid '+(lang==='en'?T.acc2:T.bdr),color:lang==='en'?T.acc2:T.mut,fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{lang='en';doRender();}},'English'),
-            h('button',{style:{flex:1,padding:'10px',borderRadius:'10px',background:lang==='he'?T.acc2+'33':T.card2,border:'1px solid '+(lang==='he'?T.acc2:T.bdr),color:lang==='he'?T.acc2:T.mut,fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{lang='he';doRender();}},'עברית')
-          ),
-          btnPrimary(t('createAccount'), doRegister, LOADING),
-          h('div',{style:{textAlign:'center',marginTop:'16px',fontSize:'13px',color:T.mut}},
-            t('haveAccount')+' ',
-            h('button',{style:{background:'none',border:'none',color:T.acc,fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{ERR='';VIEW='login';render();}},' '+t('signInLink'))
-          )
-        );
-    app.innerHTML='';authPage(app, content);
+      ?h('div',{style:{background:'var(--card)',borderRadius:'20px',padding:'28px',border:'1px solid var(--bdr)'}},
+        successBox(t('accountCreated')),
+        h('div',{style:{background:'rgba(245,158,11,.15)',borderRadius:'10px',padding:'14px',marginBottom:'16px',fontSize:'12px',color:'var(--acc)',lineHeight:'1.5'}},'⏳ '+t('pendingApproval')),
+        h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontWeight:'700',cursor:'pointer'},onclick:()=>{ERR='';VIEW='login';render();}},'← '+t('signInLink')))
+      :h('div',{style:{background:'var(--card)',borderRadius:'20px',padding:'28px',border:'1px solid var(--bdr)'}},
+        h('div',{style:{fontSize:'18px',fontWeight:'700',marginBottom:'4px'}},t('createAccount')),
+        h('div',{style:{fontSize:'12px',color:'var(--mut)',marginBottom:'20px'}},t('signUpFor')),
+        errBox(ERR),
+        inputField(t('displayName'),'text',dn,function(e){dn=e.target.value;}),
+        inputField(t('usernamePlc'),'text',un,function(e){un=e.target.value;}),
+        passwordField(t('passwordPlc'),pw,function(e){pw=e.target.value;}),
+        passwordField(t('confirmPw'),pw2,function(e){pw2=e.target.value;}),
+        h('div',{style:{display:'flex',gap:'8px',marginBottom:'16px'}},
+          h('button',{style:{flex:1,padding:'10px',borderRadius:'10px',background:lang==='en'?'rgba(59,130,246,.2)':'var(--card2)',border:'1px solid '+(lang==='en'?'var(--acc2)':'var(--bdr)'),color:lang==='en'?'var(--acc2)':'var(--mut)',fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{lang='en';doRender();}},'English'),
+          h('button',{style:{flex:1,padding:'10px',borderRadius:'10px',background:lang==='he'?'rgba(59,130,246,.2)':'var(--card2)',border:'1px solid '+(lang==='he'?'var(--acc2)':'var(--bdr)'),color:lang==='he'?'var(--acc2)':'var(--mut)',fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{lang='he';doRender();}},'עברית')),
+        btnPrimary(t('createAccount'),doRegister,LOADING),
+        h('div',{style:{textAlign:'center',marginTop:'16px',fontSize:'13px',color:'var(--mut)'}},t('haveAccount')+' ',
+          h('button',{style:{background:'none',border:'none',color:'var(--acc)',fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{ERR='';VIEW='login';render();}},t('signInLink'))));
+    app.innerHTML='';authPage(app,content);
   }
   async function doRegister(){
-    if(!username||!password){ERR=t('fillFields');doRender();return;}
-    if(password!==password2){ERR=t('pwMismatch');doRender();return;}
+    if(!un||!pw){ERR=t('fillFields');doRender();return;}
+    if(pw!==pw2){ERR=t('pwMismatch');doRender();return;}
     ERR='';LOADING=true;doRender();
-    try{
-      await api('POST','/register',{username,password,display_name:displayName||username,lang});
-      success=true;LOADING=false;doRender();
-    }catch(e){ERR=e.message;LOADING=false;doRender();}
+    try{await api('POST','/register',{username:un,password:pw,display_name:dn||un,lang});success=true;LOADING=false;doRender();}
+    catch(e){ERR=e.message;LOADING=false;doRender();}
   }
   doRender();
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  ONBOARDING TOUR
-// ═══════════════════════════════════════════════════════════════
-function showTour(){
-  let step=0;
-  const steps=[
-    {icon:'🎉', title:'tourWelcome', text:'tourWelcomeText'},
-    {icon:'📊', title:'tourDashboard', text:'tourDashboardText'},
-    {icon:'💳', title:'tourTransactions', text:'tourTransactionsText'},
-    {icon:'🎯', title:'tourGoals', text:'tourGoalsText'},
-    {icon:'⚙', title:'tourSettings', text:'tourSettingsText'},
-    {icon:'🚀', title:'tourDone', text:'tourDoneText'},
-  ];
-  function renderTour(){
-    const existing=document.querySelector('.tour-overlay');
-    if(existing) existing.remove();
-    const s=steps[step];
-    const isLast=step===steps.length-1;
-    const isFirst=step===0;
-    const overlay=h('div',{className:'tour-overlay'},
-      h('div',{className:'tour-card',style:{direction:isRTL()?'rtl':'ltr'}},
-        // Progress dots
-        h('div',{style:{display:'flex',justifyContent:'center',gap:'6px',marginBottom:'24px'}},
-          ...steps.map((_,i)=>h('div',{style:{width:i===step?'24px':'8px',height:'8px',borderRadius:'4px',background:i===step?T.acc:T.bdr,transition:'all .3s ease'}}))),
-        // Icon
-        h('div',{style:{fontSize:'48px',textAlign:'center',marginBottom:'16px'}},s.icon),
-        // Title
-        h('div',{style:{fontSize:'20px',fontWeight:'700',textAlign:'center',marginBottom:'8px'}},t(s.title)),
-        // Text
-        h('div',{style:{fontSize:'14px',color:T.mut,textAlign:'center',lineHeight:'1.7',marginBottom:'28px'}},t(s.text)),
-        // Buttons
-        h('div',{style:{display:'flex',gap:'10px'}},
-          !isFirst?h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontWeight:'700',fontSize:'14px',cursor:'pointer'},onclick:()=>{step--;renderTour();}},t('back')):null,
-          h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:`linear-gradient(135deg,${T.acc},${T.acc2})`,color:'#fff',fontWeight:'700',fontSize:'14px',cursor:'pointer'},
-            onclick:()=>{
-              if(isLast){overlay.remove();api('POST','/tour-complete').catch(()=>{});if(USER)USER.tour_completed=1;saveSession();}
-              else{step++;renderTour();}
-            }},isLast?t('getStarted'):t('next'))
-        ),
-        // Skip
-        !isLast?h('button',{style:{width:'100%',marginTop:'12px',padding:'8px',background:'none',border:'none',color:T.mut,fontSize:'12px',cursor:'pointer'},onclick:()=>{overlay.remove();api('POST','/tour-complete').catch(()=>{});if(USER)USER.tour_completed=1;saveSession();}},t('skip')):null
-      )
-    );
-    document.body.appendChild(overlay);
-  }
-  renderTour();
+// ═══════════════════════════ TERMS ═══════════════════════════
+function showTerms(){
+  const overlay=h('div',{className:'modal-overlay'},
+    h('div',{className:'modal-card',style:{direction:isRTL()?'rtl':'ltr',maxHeight:'80vh',overflowY:'auto'}},
+      h('div',{style:{fontSize:'20px',fontWeight:'700',marginBottom:'12px'}},t('termsTitle')),
+      h('div',{style:{fontSize:'13px',color:'var(--mut)',lineHeight:'1.8',marginBottom:'24px',whiteSpace:'pre-wrap'}},t('termsText')),
+      h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},
+        onclick:async()=>{try{await api('POST','/accept-terms');USER.terms_accepted=1;saveSession();overlay.remove();if(!USER.onboarding_done)showOnboarding();else if(!USER.tour_completed)showTour();}catch(e){alert(e.message);}}},t('acceptTerms'))));
+  document.body.appendChild(overlay);
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  MAIN APP (with responsive layout)
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════ ONBOARDING ═══════════════════════════
+function showOnboarding(isUpdate){
+  let monthlyGoal='',selectedGoals=[];
+  const existing=USER?.onboarding_data?JSON.parse(typeof USER.onboarding_data==='string'?USER.onboarding_data:'{}'):{};
+  if(isUpdate){monthlyGoal=String(existing.monthly_expense_goal||'');selectedGoals=existing.app_goals||[];}
+  const goalOptions=['saveMoney','monitorExpenses','investBetter','reducePayments','budgetPlanning'];
+  function doRender(){
+    const existing_overlay=document.querySelector('.onboarding-overlay');if(existing_overlay)existing_overlay.remove();
+    const overlay=h('div',{className:'modal-overlay onboarding-overlay'},
+      h('div',{className:'modal-card',style:{direction:isRTL()?'rtl':'ltr'}},
+        h('div',{style:{fontSize:'40px',textAlign:'center',marginBottom:'12px'}},'🎯'),
+        h('div',{style:{fontSize:'20px',fontWeight:'700',textAlign:'center',marginBottom:'20px'}},t('onboardTitle')),
+        h('div',{style:{fontSize:'13px',fontWeight:'700',marginBottom:'8px'}},t('onboardGoalQ')),
+        inputField('₪','number',monthlyGoal,function(e){monthlyGoal=e.target.value;}),
+        h('div',{style:{fontSize:'13px',fontWeight:'700',marginBottom:'10px',marginTop:'4px'}},t('onboardNeedQ')),
+        h('div',{style:{display:'flex',flexWrap:'wrap',gap:'8px',marginBottom:'24px'}},
+          ...goalOptions.map(g=>h('button',{style:{padding:'8px 16px',borderRadius:'99px',background:selectedGoals.includes(g)?'rgba(245,158,11,.2)':'var(--card2)',border:'1px solid '+(selectedGoals.includes(g)?'var(--acc)':'var(--bdr)'),color:selectedGoals.includes(g)?'var(--acc)':'var(--mut)',fontWeight:'700',fontSize:'12px',cursor:'pointer'},
+            onclick:()=>{if(selectedGoals.includes(g))selectedGoals=selectedGoals.filter(x=>x!==g);else selectedGoals.push(g);doRender();}},t(g)))),
+        h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},
+          onclick:async()=>{
+            const data={monthly_expense_goal:parseFloat(monthlyGoal)||0,app_goals:selectedGoals};
+            try{await api('POST','/onboarding',data);USER.onboarding_done=1;USER.onboarding_data=JSON.stringify(data);saveSession();overlay.remove();if(!isUpdate&&!USER.tour_completed)showTour();}catch(e){alert(e.message);}
+          }},isUpdate?t('save'):t('onboardDone')),
+        !isUpdate?h('button',{style:{width:'100%',marginTop:'8px',padding:'10px',background:'none',border:'none',color:'var(--mut)',fontSize:'12px',cursor:'pointer'},
+          onclick:()=>{overlay.remove();if(!USER.tour_completed)showTour();}},t('onboardSkip')):null
+      ));
+    document.body.appendChild(overlay);
+  }
+  doRender();
+}
+
+// ═══════════════════════════ TOUR ═══════════════════════════
+function showTour(){
+  let step=0;
+  const steps=[{icon:'🎉',k:'tourWelcome'},{icon:'📊',k:'tourDashboard'},{icon:'💳',k:'tourTransactions'},{icon:'⬆',k:'tourUpload'},{icon:'✦',k:'tourAI'},{icon:'🎯',k:'tourGoals'},{icon:'⚙',k:'tourSettings'},{icon:'🚀',k:'tourDone'}];
+  function doRender(){
+    const ex=document.querySelector('.tour-overlay');if(ex)ex.remove();
+    const s=steps[step],isLast=step===steps.length-1,isFirst=step===0;
+    const overlay=h('div',{className:'tour-overlay'},
+      h('div',{className:'tour-card',style:{direction:isRTL()?'rtl':'ltr'}},
+        h('div',{style:{display:'flex',justifyContent:'center',gap:'6px',marginBottom:'24px'}},...steps.map((_,i)=>h('div',{style:{width:i===step?'24px':'8px',height:'8px',borderRadius:'4px',background:i===step?'var(--acc)':'var(--bdr)',transition:'all .3s'}}))),
+        h('div',{style:{fontSize:'48px',textAlign:'center',marginBottom:'16px'}},s.icon),
+        h('div',{style:{fontSize:'20px',fontWeight:'700',textAlign:'center',marginBottom:'8px'}},t(s.k)),
+        h('div',{style:{fontSize:'14px',color:'var(--mut)',textAlign:'center',lineHeight:'1.7',marginBottom:'28px'}},t(s.k+'Text')),
+        h('div',{style:{display:'flex',gap:'10px'}},
+          !isFirst?h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontWeight:'700',cursor:'pointer'},onclick:()=>{step--;doRender();}},t('back')):null,
+          h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},
+            onclick:()=>{if(isLast){overlay.remove();api('POST','/tour-complete').catch(()=>{});if(USER)USER.tour_completed=1;saveSession();}else{step++;doRender();}}},isLast?t('getStarted'):t('next'))),
+        !isLast?h('button',{style:{width:'100%',marginTop:'12px',padding:'8px',background:'none',border:'none',color:'var(--mut)',fontSize:'12px',cursor:'pointer'},onclick:()=>{overlay.remove();api('POST','/tour-complete').catch(()=>{});if(USER)USER.tour_completed=1;saveSession();}},t('skip')):null));
+    document.body.appendChild(overlay);
+  }
+  doRender();
+}
+
+// ═══════════════════════════ MAIN APP SHELL ═══════════════════════════
 function renderApp(app){
   app.innerHTML='';
-  const wrapper=h('div',{style:{minHeight:'100vh',background:T.bg,direction:isRTL()?'rtl':'ltr'}});
-
-  // ─── Desktop Sidebar ──────────────────────────────────────
-  const sidebar=h('div',{className:'desktop-sidebar',style:{position:'fixed',top:0,left:isRTL()?'auto':'0',right:isRTL()?'0':'auto',bottom:0,width:'260px',background:T.card,borderRight:isRTL()?'none':'1px solid '+T.bdr,borderLeft:isRTL()?'1px solid '+T.bdr:'none',padding:'24px 16px',display:'flex',flexDirection:'column',zIndex:100}});
-  // Logo
-  sidebar.appendChild(h('div',{style:{display:'flex',alignItems:'center',gap:'12px',marginBottom:'32px',padding:'0 8px'}},
-    h('div',{style:{width:'40px',height:'40px',borderRadius:'12px',background:`linear-gradient(135deg,${T.acc},${T.acc2})`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'20px',fontWeight:'700',color:'#fff'}},'₪'),
-    h('div',{},h('div',{style:{fontSize:'18px',fontWeight:'700'}},'financiQ'),h('div',{style:{fontSize:'10px',color:T.mut}},t('tagline')))
-  ));
-  // Nav items
+  const dir=isRTL()?'rtl':'ltr';
+  const wrapper=h('div',{style:{minHeight:'100vh',background:'var(--bg)',direction:dir}});
   const navItems=[
-    {id:'dashboard',icon:'📊',label:t('dashboard')},
-    {id:'transactions',icon:'💳',label:t('transactions')},
-    {id:'goals',icon:'🎯',label:t('goals')},
-    {id:'settings',icon:'⚙',label:t('settings')},
-  ];
+    {id:'dashboard',icon:'📊',l:t('dashboard')},{id:'transactions',icon:'💳',l:t('transactions')},
+    {id:'budgets',icon:'📋',l:t('budgets')},{id:'upload',icon:'⬆',l:t('upload')},{id:'ai',icon:'✦',l:t('aiAgent')},
+    {id:'cards',icon:'💳',l:t('cards')},{id:'goals',icon:'🎯',l:t('goals')},{id:'settings',icon:'⚙',l:t('settings')}];
+  // Desktop Sidebar
+  const sb=h('div',{className:'desktop-sidebar',style:{position:'fixed',top:0,[isRTL()?'right':'left']:0,bottom:0,width:'260px',background:'var(--card)',[isRTL()?'borderLeft':'borderRight']:'1px solid var(--bdr)',padding:'24px 16px',display:'flex',flexDirection:'column',zIndex:100}});
+  sb.appendChild(h('div',{style:{display:'flex',alignItems:'center',gap:'12px',marginBottom:'32px',padding:'0 8px'}},
+    h('div',{style:{width:'40px',height:'40px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'20px',fontWeight:'700',color:'#fff'}},'₪'),
+    h('div',{},h('div',{style:{fontSize:'18px',fontWeight:'700'}},'financiQ'),h('div',{style:{fontSize:'10px',color:'var(--mut)'}},t('tagline')))));
   navItems.forEach(n=>{
     const active=APP_TAB===n.id;
-    sidebar.appendChild(h('button',{style:{width:'100%',padding:'12px 16px',borderRadius:'12px',background:active?T.acc+'18':'transparent',border:'none',color:active?T.acc:T.mut,fontSize:'14px',fontWeight:active?'700':'400',cursor:'pointer',display:'flex',alignItems:'center',gap:'12px',marginBottom:'4px',textAlign:isRTL()?'right':'left',direction:isRTL()?'rtl':'ltr'},
-      onclick:()=>{APP_TAB=n.id;render();}},
-      h('span',{style:{fontSize:'18px'}},n.icon), n.label));
+    sb.appendChild(h('button',{style:{width:'100%',padding:'12px 16px',borderRadius:'12px',background:active?'rgba(245,158,11,.1)':'transparent',border:'none',color:active?'var(--acc)':'var(--mut)',fontSize:'14px',fontWeight:active?'700':'400',cursor:'pointer',display:'flex',alignItems:'center',gap:'12px',marginBottom:'4px',textAlign:isRTL()?'right':'left',direction:dir},onclick:()=>{APP_TAB=n.id;render();}},h('span',{style:{fontSize:'18px'}},n.icon),n.l));
   });
-  // Admin link
-  if(USER?.is_admin){
-    sidebar.appendChild(h('button',{style:{width:'100%',padding:'12px 16px',borderRadius:'12px',background:'transparent',border:'none',color:T.red,fontSize:'14px',fontWeight:'400',cursor:'pointer',display:'flex',alignItems:'center',gap:'12px',marginBottom:'4px',textAlign:isRTL()?'right':'left'},
-      onclick:()=>{VIEW='admin';render();}},h('span',{style:{fontSize:'18px'}},'🛡'), t('admin')));
+  if(USER?.role&&USER.role!=='user'){
+    sb.appendChild(h('button',{style:{width:'100%',padding:'12px 16px',borderRadius:'12px',background:'transparent',border:'none',color:'var(--red)',fontSize:'14px',cursor:'pointer',display:'flex',alignItems:'center',gap:'12px',marginBottom:'4px',textAlign:isRTL()?'right':'left'},onclick:()=>{VIEW='admin';render();}},h('span',{style:{fontSize:'18px'}},'🛡'),t('admin')));
   }
-  // Spacer + user + signout
-  sidebar.appendChild(h('div',{style:{flex:1}}));
-  sidebar.appendChild(h('div',{style:{padding:'16px',background:T.card2,borderRadius:'14px',border:'1px solid '+T.bdr}},
+  sb.appendChild(h('div',{style:{flex:1}}));
+  sb.appendChild(h('div',{style:{padding:'16px',background:'var(--card2)',borderRadius:'14px',border:'1px solid var(--bdr)'}},
     h('div',{style:{fontSize:'13px',fontWeight:'700',marginBottom:'4px'}},USER?.display_name||USER?.username),
-    h('div',{style:{fontSize:'11px',color:T.mut,marginBottom:'10px'}},'@'+(USER?.username||'')),
-    h('button',{style:{width:'100%',padding:'8px',borderRadius:'8px',background:T.red+'18',border:'1px solid '+T.red+'33',color:T.red,fontSize:'12px',fontWeight:'700',cursor:'pointer'},onclick:()=>{clearSession();VIEW='login';render();}},t('signOut'))
-  ));
-  wrapper.appendChild(sidebar);
-
-  // ─── Mobile Header ────────────────────────────────────────
-  const mobileHeader=h('div',{className:'mobile-nav',style:{position:'sticky',top:0,zIndex:100,background:T.glass,borderBottom:'1px solid '+T.bdr,padding:'calc(var(--st) + 8px) 16px 8px',display:'flex',alignItems:'center',justifyContent:'space-between',backdropFilter:'blur(16px)'}},
+    h('div',{style:{fontSize:'11px',color:'var(--mut)',marginBottom:'10px'}},'@'+(USER?.username||'')),
+    h('button',{style:{width:'100%',padding:'8px',borderRadius:'8px',background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.2)',color:'var(--red)',fontSize:'12px',fontWeight:'700',cursor:'pointer'},onclick:()=>{clearSession();VIEW='login';render();}},t('signOut'))));
+  wrapper.appendChild(sb);
+  // Mobile Header
+  wrapper.appendChild(h('div',{className:'mobile-nav',style:{position:'sticky',top:0,zIndex:100,background:'var(--glass)',borderBottom:'1px solid var(--bdr)',padding:'calc(var(--st) + 8px) 16px 8px',display:'flex',alignItems:'center',justifyContent:'space-between',backdropFilter:'blur(16px)'}},
     h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},
-      h('div',{style:{width:'32px',height:'32px',borderRadius:'10px',background:`linear-gradient(135deg,${T.acc},${T.acc2})`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'15px',fontWeight:'700',color:'#fff'}},'₪'),
+      h('div',{style:{width:'32px',height:'32px',borderRadius:'10px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'15px',fontWeight:'700',color:'#fff'}},'₪'),
       h('div',{style:{fontSize:'16px',fontWeight:'700'}},'financiQ')),
-    h('button',{style:{padding:'6px 12px',borderRadius:'8px',background:T.red+'18',border:'1px solid '+T.red+'33',color:T.red,fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:()=>{clearSession();VIEW='login';render();}},t('signOut'))
-  );
-  wrapper.appendChild(mobileHeader);
-
-  // ─── Main content ─────────────────────────────────────────
-  const main=h('div',{className:'main-with-sidebar',style:{marginLeft:'0',padding:IS_MOBILE?'16px':'32px',paddingBottom:IS_MOBILE?'100px':'32px',maxWidth:'900px',margin:IS_MOBILE?'0 auto':'0 auto 0 260px'}});
-  // Page title
+    h('button',{style:{padding:'6px 12px',borderRadius:'8px',background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.2)',color:'var(--red)',fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:()=>{clearSession();VIEW='login';render();}},t('signOut'))));
+  // Main content
+  const main=h('div',{className:'main-with-sidebar',style:{marginLeft:'0',padding:IS_MOBILE?'16px':'32px',paddingBottom:IS_MOBILE?'100px':'32px',maxWidth:'960px',margin:IS_MOBILE?'0 auto':'0 auto 0 260px'}});
   main.appendChild(h('div',{style:{marginBottom:'24px'},className:'fu'},
     h('div',{style:{fontSize:IS_MOBILE?'22px':'28px',fontWeight:'700'}},t('welcome')+', '+(USER?.display_name||USER?.username||'')),
-    h('div',{style:{fontSize:'13px',color:T.mut,marginTop:'4px'}},new Date().toLocaleDateString(USER?.lang==='he'?'he-IL':'en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}))
-  ));
-
-  if(APP_TAB==='dashboard') renderDashboard(main);
-  else if(APP_TAB==='transactions') renderTransactions(main);
-  else if(APP_TAB==='goals') renderGoals(main);
-  else if(APP_TAB==='settings') renderSettings(main);
-
+    h('div',{style:{fontSize:'13px',color:'var(--mut)',marginTop:'4px'}},new Date().toLocaleDateString(USER?.lang==='he'?'he-IL':'en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}))));
+  if(APP_TAB==='dashboard')renderDashboard(main);
+  else if(APP_TAB==='transactions')renderTransactions(main);
+  else if(APP_TAB==='budgets')renderBudgets(main);
+  else if(APP_TAB==='upload')renderUpload(main);
+  else if(APP_TAB==='ai')renderAI(main);
+  else if(APP_TAB==='cards')renderCards(main);
+  else if(APP_TAB==='goals')renderGoals(main);
+  else if(APP_TAB==='settings')renderSettings(main);
   wrapper.appendChild(main);
-
-  // ─── Mobile Bottom Nav ────────────────────────────────────
-  const bottomNav=h('div',{className:'mobile-nav',style:{position:'fixed',bottom:0,left:0,right:0,background:T.glass,borderTop:'1px solid '+T.bdr,padding:'8px 8px calc(var(--sb) + 8px)',display:'flex',justifyContent:'space-around',backdropFilter:'blur(16px)',zIndex:100}});
-  const mobileNavItems=[...navItems];
-  if(USER?.is_admin) mobileNavItems.push({id:'_admin',icon:'🛡',label:t('admin')});
-  mobileNavItems.forEach(n=>{
+  // Mobile bottom nav
+  const bn=h('div',{className:'mobile-nav',style:{position:'fixed',bottom:0,left:0,right:0,background:'var(--glass)',borderTop:'1px solid var(--bdr)',padding:'6px 4px calc(var(--sb) + 6px)',display:'flex',justifyContent:'space-around',backdropFilter:'blur(16px)',zIndex:100}});
+  const mobileItems=[{id:'dashboard',icon:'📊'},{id:'transactions',icon:'💳'},{id:'upload',icon:'⬆'},{id:'ai',icon:'✦'},{id:'goals',icon:'🎯'},{id:'settings',icon:'⚙'}];
+  if(USER?.role&&USER.role!=='user')mobileItems.push({id:'_admin',icon:'🛡'});
+  mobileItems.forEach(n=>{
     const active=n.id==='_admin'?false:APP_TAB===n.id;
-    bottomNav.appendChild(h('button',{style:{background:'none',border:'none',color:active?T.acc:T.mut,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:'2px',padding:'6px 12px',borderRadius:'10px',fontSize:'10px',fontWeight:active?'700':'400'},
+    bn.appendChild(h('button',{style:{background:'none',border:'none',color:active?'var(--acc)':'var(--mut)',cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:'1px',padding:'4px 6px',borderRadius:'8px',fontSize:'9px',fontWeight:active?'700':'400'},
       onclick:()=>{if(n.id==='_admin'){VIEW='admin';render();}else{APP_TAB=n.id;render();}}},
-      h('span',{style:{fontSize:'20px'}},n.icon),n.label));
+      h('span',{style:{fontSize:'18px'}},n.icon)));
   });
-  wrapper.appendChild(bottomNav);
-
+  wrapper.appendChild(bn);
   app.appendChild(wrapper);
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  DASHBOARD TAB
-// ═══════════════════════════════════════════════════════════════
-async function renderDashboard(container){
-  const loading=h('div',{style:{textAlign:'center',padding:'40px',color:T.mut}},h('span',{className:'spinner'}),' Loading...');
-  container.appendChild(loading);
+// ═══════════════════════════ DASHBOARD ═══════════════════════════
+async function renderDashboard(c){
+  const ld=h('div',{style:{textAlign:'center',padding:'40px',color:'var(--mut)'}},h('span',{className:'spinner'}),' Loading...');
+  c.appendChild(ld);
   try{
-    const stats=await api('GET','/stats');
-    loading.remove();
-    // Stat cards
-    const grid=h('div',{style:{display:'flex',gap:'12px',marginBottom:'24px',flexWrap:IS_MOBILE?'wrap':'nowrap'},className:'fu'});
-    grid.appendChild(statCard(t('monthExpenses'), '₪'+Number(stats.month_expenses).toLocaleString(), T.red));
-    grid.appendChild(statCard(t('monthIncome'), '₪'+Number(stats.month_income).toLocaleString(), T.grn));
-    grid.appendChild(statCard(t('totalTx'), String(stats.total_transactions), T.acc2));
-    container.appendChild(grid);
-
-    // Category breakdown
-    if(stats.categories && stats.categories.length){
-      const catBox=h('div',{style:{background:T.card,borderRadius:'16px',padding:'20px',border:'1px solid '+T.bdr,marginBottom:'20px'},className:'fu'},
-        h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'16px'}},t('category')+' Breakdown'));
-      const maxCat=Math.max(...stats.categories.map(c=>c.total),1);
-      stats.categories.forEach(c=>{
-        const pct=Math.round(c.total/maxCat*100);
-        catBox.appendChild(h('div',{style:{marginBottom:'12px'}},
-          h('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'13px',marginBottom:'4px'}},
-            h('span',{},c.category), h('span',{style:{color:T.acc}},'₪'+Number(c.total).toLocaleString())),
-          h('div',{style:{width:'100%',height:'8px',borderRadius:'4px',background:T.card2}},
-            h('div',{style:{width:pct+'%',height:'100%',borderRadius:'4px',background:`linear-gradient(90deg,${T.acc},${T.acc2})`,transition:'width .5s ease'}}))
-        ));
+    const s=await api('GET','/stats');ld.remove();
+    // Monthly goal comparison
+    if(s.monthly_goal>0){
+      const pct=s.monthly_goal>0?Math.round(s.month_expenses/s.monthly_goal*100):0;
+      const over=pct>100;
+      c.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'18px',border:'1px solid var(--bdr)',marginBottom:'16px',display:'flex',alignItems:'center',gap:'16px'},className:'fu'},
+        h('div',{style:{fontSize:'32px'}},over?'⚠':'✅'),
+        h('div',{style:{flex:1}},
+          h('div',{style:{fontSize:'14px',fontWeight:'700',marginBottom:'4px'}},t('monthlyGoal')+': ₪'+Number(s.monthly_goal).toLocaleString()),
+          h('div',{style:{width:'100%',height:'8px',borderRadius:'4px',background:'var(--card2)',marginBottom:'4px'}},
+            h('div',{style:{width:Math.min(pct,100)+'%',height:'100%',borderRadius:'4px',background:over?'var(--red)':'var(--grn)'}})),
+          h('div',{style:{fontSize:'11px',color:over?'var(--red)':'var(--grn)'}},
+            '₪'+Number(s.month_expenses).toLocaleString()+' / ₪'+Number(s.monthly_goal).toLocaleString()+' ('+pct+'%)'))));
+    }
+    // Stats
+    const grid=h('div',{style:{display:'flex',gap:'12px',marginBottom:'20px',flexWrap:IS_MOBILE?'wrap':'nowrap'},className:'fu'});
+    grid.appendChild(statCard(t('monthExpenses'),'₪'+Number(s.month_expenses).toLocaleString(),'var(--red)'));
+    grid.appendChild(statCard(t('monthIncome'),'₪'+Number(s.month_income).toLocaleString(),'var(--grn)'));
+    grid.appendChild(statCard(t('totalTx'),String(s.total_transactions),'var(--acc2)'));
+    c.appendChild(grid);
+    // Budget alerts
+    if(s.budget_alerts&&s.budget_alerts.length){
+      const ab=h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'18px',border:'1px solid rgba(239,68,68,.3)',marginBottom:'16px'},className:'fu'},
+        h('div',{style:{fontSize:'14px',fontWeight:'700',color:'var(--red)',marginBottom:'12px',display:'flex',alignItems:'center',gap:'8px'}},'⚠ '+t('budgetAlert')));
+      s.budget_alerts.forEach(a=>{
+        ab.appendChild(h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 0',borderBottom:'1px solid var(--bdr)'}},
+          h('span',{style:{fontSize:'13px',fontWeight:'700'}},a.category),
+          h('span',{style:{fontSize:'12px',color:a.percent>100?'var(--red)':'var(--acc)'}},
+            '₪'+a.spent.toLocaleString()+'/₪'+a.budget.toLocaleString()+' ('+a.percent+'%)')));
       });
-      container.appendChild(catBox);
+      c.appendChild(ab);
     }
-
-    // Goals summary
-    if(stats.goals && stats.goals.length){
-      const goalBox=h('div',{style:{background:T.card,borderRadius:'16px',padding:'20px',border:'1px solid '+T.bdr},className:'fu'},
-        h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'16px'}},t('goals')));
-      stats.goals.forEach(g=>{
-        const pct=g.target>0?Math.min(Math.round(g.saved/g.target*100),100):0;
-        goalBox.appendChild(h('div',{style:{marginBottom:'14px'}},
-          h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',fontSize:'13px',marginBottom:'4px'}},
-            h('span',{},g.icon+' '+g.name),
-            h('span',{style:{color:T.grn}},pct+'%')),
-          h('div',{style:{width:'100%',height:'8px',borderRadius:'4px',background:T.card2}},
-            h('div',{style:{width:pct+'%',height:'100%',borderRadius:'4px',background:g.color||T.grn,transition:'width .5s ease'}}))
-        ));
+    // Anomalies
+    if(s.anomalies&&s.anomalies.length){
+      const an=h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'18px',border:'1px solid rgba(245,158,11,.3)',marginBottom:'16px'},className:'fu'},
+        h('div',{style:{fontSize:'14px',fontWeight:'700',color:'var(--acc)',marginBottom:'12px'}},'🔍 '+t('anomaly')));
+      s.anomalies.forEach(a=>{
+        an.appendChild(h('div',{style:{padding:'8px 0',borderBottom:'1px solid var(--bdr)',fontSize:'13px'}},
+          h('div',{style:{fontWeight:'700'}},a.description),
+          h('div',{style:{color:'var(--mut)',fontSize:'11px'}},a.category+' · '+a.date+' · ₪'+a.amount+' (avg: ₪'+a.avg+')')));
       });
-      container.appendChild(goalBox);
+      c.appendChild(an);
     }
-
-    if(!stats.total_transactions){
-      container.appendChild(h('div',{style:{textAlign:'center',padding:'40px',color:T.mut,background:T.card,borderRadius:'16px',border:'1px solid '+T.bdr},className:'fu'},
-        h('div',{style:{fontSize:'40px',marginBottom:'12px'}},'📭'),
-        h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'4px'}},t('noData')),
-        h('div',{style:{fontSize:'12px'}},USER?.lang==='he'?'הוסף את התנועה הראשונה שלך בלשונית "תנועות"':'Add your first transaction in the "Transactions" tab'),
-        h('button',{style:{marginTop:'16px',padding:'10px 24px',borderRadius:'10px',background:`linear-gradient(135deg,${T.acc},${T.acc2})`,color:'#fff',fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{APP_TAB='transactions';render();}},t('addTx'))
-      ));
+    // Duplicates
+    if(s.duplicates&&s.duplicates.length){
+      const dp=h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'18px',border:'1px solid rgba(239,68,68,.3)',marginBottom:'16px'},className:'fu'},
+        h('div',{style:{fontSize:'14px',fontWeight:'700',color:'var(--red)',marginBottom:'12px'}},'🔄 '+t('duplicate')));
+      s.duplicates.forEach(d=>{
+        dp.appendChild(h('div',{style:{padding:'8px 0',borderBottom:'1px solid var(--bdr)',fontSize:'12px'}},
+          h('div',{style:{fontWeight:'700'}},d.tx1.description+' · ₪'+d.tx1.amount),
+          h('div',{style:{color:'var(--mut)'}},d.tx1.date+' & '+d.tx2.date)));
+      });
+      c.appendChild(dp);
     }
-  }catch(e){loading.remove();container.appendChild(errBox(e.message));}
+    // Card spending
+    if(s.cards_spend&&s.cards_spend.length){
+      const cs=h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'18px',border:'1px solid var(--bdr)',marginBottom:'16px'},className:'fu'},
+        h('div',{style:{fontSize:'14px',fontWeight:'700',marginBottom:'12px'}},'💳 '+t('cards')));
+      s.cards_spend.forEach(cd=>{
+        cs.appendChild(h('div',{style:{display:'flex',justifyContent:'space-between',padding:'8px 0',borderBottom:'1px solid var(--bdr)',fontSize:'13px'}},
+          h('span',{style:{fontWeight:'700'}},cd.card_name||'Unknown'),
+          h('span',{style:{color:'var(--acc)'}},'₪'+Number(cd.total).toLocaleString()+' ('+cd.cnt+' tx)')));
+      });
+      c.appendChild(cs);
+    }
+    // Categories
+    if(s.categories&&s.categories.length){
+      const cb=h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'18px',border:'1px solid var(--bdr)',marginBottom:'16px'},className:'fu'},
+        h('div',{style:{fontSize:'14px',fontWeight:'700',marginBottom:'12px'}},t('category')));
+      const mx=Math.max(...s.categories.map(c=>c.total),1);
+      s.categories.forEach(cat=>{
+        const pct=Math.round(cat.total/mx*100);
+        cb.appendChild(h('div',{style:{marginBottom:'10px'}},
+          h('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'13px',marginBottom:'3px'}},h('span',{},cat.category),h('span',{style:{color:'var(--acc)'}},'₪'+Number(cat.total).toLocaleString())),
+          h('div',{style:{width:'100%',height:'6px',borderRadius:'3px',background:'var(--card2)'}},h('div',{style:{width:pct+'%',height:'100%',borderRadius:'3px',background:'linear-gradient(90deg,var(--acc),var(--acc2))'}}))));
+      });
+      c.appendChild(cb);
+    }
+    // Spending Forecast
+    if(s.forecast>0){
+      const daysLeft=s.days_in_month-s.days_passed;
+      c.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'18px',border:'1px solid var(--bdr)',marginBottom:'16px'},className:'fu'},
+        h('div',{style:{fontSize:'14px',fontWeight:'700',marginBottom:'10px'}},'📈 '+t('forecast')),
+        h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center'}},
+          h('div',{},
+            h('div',{style:{fontSize:'22px',fontWeight:'700',color:'var(--acc)'}},'₪'+Number(s.forecast).toLocaleString()),
+            h('div',{style:{fontSize:'11px',color:'var(--mut)'}},t('forecastDesc'))),
+          h('div',{style:{textAlign:'right'}},
+            h('div',{style:{fontSize:'13px',fontWeight:'700'}},'₪'+s.daily_avg+'/'+t('dailyAvg')),
+            h('div',{style:{fontSize:'11px',color:'var(--mut)'}},daysLeft+' '+t('daysLeft'))))));
+    }
+    // Month-over-Month
+    if(s.prev_month_expenses>0||s.month_expenses>0){
+      const diff=s.month_expenses-s.prev_month_expenses;
+      const pctChange=s.prev_month_expenses>0?Math.round((diff/s.prev_month_expenses)*100):0;
+      const isUp=diff>0;
+      c.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'18px',border:'1px solid var(--bdr)',marginBottom:'16px'},className:'fu'},
+        h('div',{style:{fontSize:'14px',fontWeight:'700',marginBottom:'10px'}},'📅 '+t('momComparison')),
+        h('div',{style:{display:'flex',gap:'16px',alignItems:'center'}},
+          h('div',{style:{flex:1}},
+            h('div',{style:{fontSize:'11px',color:'var(--mut)',marginBottom:'2px'}},t('monthExpenses')),
+            h('div',{style:{fontSize:'18px',fontWeight:'700'}},'₪'+Number(s.month_expenses).toLocaleString())),
+          h('div',{style:{fontSize:'20px',color:'var(--mut)'}},'vs'),
+          h('div',{style:{flex:1,textAlign:'right'}},
+            h('div',{style:{fontSize:'11px',color:'var(--mut)',marginBottom:'2px'}},USER?.lang==='he'?'חודש קודם':'Last month'),
+            h('div',{style:{fontSize:'18px',fontWeight:'700'}},'₪'+Number(s.prev_month_expenses).toLocaleString()))),
+        h('div',{style:{marginTop:'10px',padding:'8px 12px',borderRadius:'8px',background:isUp?'rgba(239,68,68,.1)':'rgba(16,185,129,.1)',textAlign:'center',fontSize:'13px',fontWeight:'700',color:isUp?'var(--red)':'var(--grn)'}},
+          (isUp?'↑':'↓')+' '+Math.abs(pctChange)+'% (₪'+Math.abs(diff).toLocaleString()+') '+(isUp?t('momUp'):t('momDown')))));
+    }
+    // AI Tips
+    if(s.ai_tips&&s.ai_tips.length){
+      c.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'18px',border:'1px solid rgba(245,158,11,.3)',marginBottom:'16px'},className:'fu'},
+        h('div',{style:{fontSize:'14px',fontWeight:'700',marginBottom:'12px',display:'flex',alignItems:'center',gap:'8px'}},'💡 '+t('aiTips')),
+        ...s.ai_tips.map(tip=>h('div',{style:{padding:'10px 14px',background:'var(--card2)',borderRadius:'10px',marginBottom:'6px',fontSize:'13px',lineHeight:'1.5'}},tip))));
+    } else if(s.total_transactions>3){
+      c.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'18px',border:'1px solid var(--bdr)',marginBottom:'16px',textAlign:'center'},className:'fu'},
+        h('div',{style:{fontSize:'14px',fontWeight:'700',marginBottom:'10px'}},'💡 '+t('aiTips')),
+        h('button',{style:{padding:'10px 24px',borderRadius:'10px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',fontSize:'13px',cursor:'pointer'},
+          onclick:async function(){this.textContent='...';try{const r=await api('POST','/generate-tips');if(r.tips)APP_TAB='dashboard';render();}catch(e){alert(e.message);this.textContent=t('generateTips');}}},t('generateTips'))));
+    }
+    // Household
+    if(s.household){
+      const hh=s.household;
+      c.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'18px',border:'1px solid var(--bdr)',marginBottom:'16px'},className:'fu'},
+        h('div',{style:{fontSize:'14px',fontWeight:'700',marginBottom:'10px'}},'🏠 '+hh.name+' — ₪'+Number(hh.total).toLocaleString()),
+        ...hh.members.map(m=>h('div',{style:{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid var(--bdr)',fontSize:'13px'}},
+          h('span',{},m.name),h('span',{style:{fontWeight:'700',color:'var(--acc)'}},'₪'+Number(m.total).toLocaleString())))));
+    }
+    // Empty state
+    if(!s.total_transactions){
+      c.appendChild(h('div',{style:{textAlign:'center',padding:'40px',color:'var(--mut)',background:'var(--card)',borderRadius:'16px',border:'1px solid var(--bdr)'},className:'fu'},
+        h('div',{style:{fontSize:'40px',marginBottom:'12px'}},'📭'),h('div',{style:{fontSize:'15px',fontWeight:'700'}},t('noData')),
+        h('button',{style:{marginTop:'16px',padding:'10px 24px',borderRadius:'10px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:()=>{APP_TAB='transactions';render();}},t('addTx'))));
+    }
+  }catch(e){ld.remove();c.appendChild(errBox(e.message));}
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  TRANSACTIONS TAB
-// ═══════════════════════════════════════════════════════════════
-async function renderTransactions(container){
-  // Add transaction form
-  let showForm=false;
-  const formBox=h('div',{style:{marginBottom:'20px'}});
-
+// ═══════════════════════════ TRANSACTIONS ═══════════════════════════
+async function renderTransactions(c){
+  let showForm=false,searchQ='',filterType='';
+  const formBox=h('div',{style:{marginBottom:'16px'}});
+  const filterBox=h('div',{style:{marginBottom:'16px'}});
+  const listBox=h('div',{className:'fu'});
+  // Filter bar
+  filterBox.appendChild(h('div',{style:{display:'flex',gap:'8px',flexWrap:'wrap'}},
+    h('input',{type:'text',placeholder:'🔍 '+t('search'),style:{flex:1,minWidth:'150px',padding:'10px 14px',borderRadius:'10px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontSize:'13px'},
+      oninput:function(e){searchQ=e.target.value;loadTx();}}),
+    ...[['',t('all')],['expense',t('expense')],['income',t('income')],['recurring',t('recurring')]].map(([v,l])=>
+      h('button',{style:{padding:'8px 14px',borderRadius:'99px',background:filterType===v?'var(--acc)':'var(--card)',border:'1px solid '+(filterType===v?'var(--acc)':'var(--bdr)'),color:filterType===v?'#fff':'var(--mut)',fontSize:'11px',fontWeight:'700',cursor:'pointer'},
+        onclick:()=>{filterType=v;loadTx();}},l))));
+  c.appendChild(filterBox);
+  // Add form
   function renderForm(){
     formBox.innerHTML='';
     if(!showForm){
-      formBox.appendChild(h('button',{style:{width:'100%',padding:'14px',borderRadius:'14px',background:T.card,border:'2px dashed '+T.bdr,color:T.acc,fontWeight:'700',fontSize:'14px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px'},onclick:()=>{showForm=true;renderForm();}},
-        h('span',{style:{fontSize:'18px'}},'+'), t('addTx')));
+      formBox.appendChild(h('button',{style:{width:'100%',padding:'14px',borderRadius:'14px',background:'var(--card)',border:'2px dashed var(--bdr)',color:'var(--acc)',fontWeight:'700',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px'},onclick:()=>{showForm=true;renderForm();}},'+  '+t('addTx')));
       return;
     }
-    let txDate=new Date().toISOString().slice(0,10), txDesc='', txAmt='', txCat='Food', txType='expense';
-    const cats=['Food','Transport','Shopping','Entertainment','Bills','Health','Education','Salary','Freelance','Gift','Other'];
-    const form=h('div',{style:{background:T.card,borderRadius:'16px',padding:'20px',border:'1px solid '+T.acc+'44'}},
-      h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'16px'}},t('addTx')),
-      // Type toggle
+    let txD=new Date().toISOString().slice(0,10),txDesc='',txAmt='',txCat='Food',txType='expense',txCard='',txRec=false;
+    const cats=['Food','Transport','Shopping','Entertainment','Bills','Health','Education','Salary','Freelance','Gift','Mortgage','Insurance','Subscription','Other'];
+    formBox.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid rgba(245,158,11,.3)'}},
+      h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'14px'}},t('addTx')),
+      // Receipt scanner
+      receiptScannerBtn(function(tx){
+        if(tx.date){const di=formBox.querySelector('input[type=date]');if(di){di.value=tx.date;txD=tx.date;}}
+        if(tx.description){const ds=formBox.querySelectorAll('input[type=text]');if(ds[0]){ds[0].value=tx.description;txDesc=tx.description;}}
+        if(tx.amount){const am=formBox.querySelector('input[type=number]');if(am){am.value=tx.amount;txAmt=String(tx.amount);}}
+        if(tx.category)txCat=tx.category;
+        renderForm();
+      }),
       h('div',{style:{display:'flex',gap:'8px',marginBottom:'12px'}},
-        h('button',{style:{flex:1,padding:'10px',borderRadius:'10px',background:txType==='expense'?T.red+'22':T.card2,border:'1px solid '+(txType==='expense'?T.red:T.bdr),color:txType==='expense'?T.red:T.mut,fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{txType='expense';renderForm();}},t('expense')),
-        h('button',{style:{flex:1,padding:'10px',borderRadius:'10px',background:txType==='income'?T.grn+'22':T.card2,border:'1px solid '+(txType==='income'?T.grn:T.bdr),color:txType==='income'?T.grn:T.mut,fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{txType='income';renderForm();}},t('income'))
-      ),
-      inputField(t('date'),'date',txDate,function(e){txDate=e.target.value;}),
+        h('button',{style:{flex:1,padding:'10px',borderRadius:'10px',background:txType==='expense'?'rgba(239,68,68,.15)':'var(--card2)',border:'1px solid '+(txType==='expense'?'var(--red)':'var(--bdr)'),color:txType==='expense'?'var(--red)':'var(--mut)',fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{txType='expense';renderForm();}},t('expense')),
+        h('button',{style:{flex:1,padding:'10px',borderRadius:'10px',background:txType==='income'?'rgba(16,185,129,.15)':'var(--card2)',border:'1px solid '+(txType==='income'?'var(--grn)':'var(--bdr)'),color:txType==='income'?'var(--grn)':'var(--mut)',fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{txType='income';renderForm();}},t('income'))),
+      inputField(t('date'),'date',txD,function(e){txD=e.target.value;}),
       inputField(t('description'),'text',txDesc,function(e){txDesc=e.target.value;}),
       inputField(t('amount'),'number',txAmt,function(e){txAmt=e.target.value;}),
-      // Category selector
-      h('select',{style:{width:'100%',padding:'14px 16px',borderRadius:'12px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontSize:'14px',marginBottom:'12px'},onchange:function(e){txCat=e.target.value;}},
-        ...cats.map(c=>h('option',{value:c,style:{background:T.card2}},c))),
+      h('select',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontSize:'14px',marginBottom:'12px'},onchange:function(e){txCat=e.target.value;}},
+        ...cats.map(c=>h('option',{value:c,style:{background:'var(--card2)'}},c))),
+      inputField(t('cardName')+' (optional)','text',txCard,function(e){txCard=e.target.value;}),
+      h('label',{style:{display:'flex',alignItems:'center',gap:'8px',marginBottom:'16px',fontSize:'13px',color:'var(--mut)',cursor:'pointer'}},
+        h('input',{type:'checkbox',style:{width:'18px',height:'18px'},onchange:function(e){txRec=e.target.checked;}}),t('recurring')),
       h('div',{style:{display:'flex',gap:'8px'}},
-        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontWeight:'700',cursor:'pointer'},onclick:()=>{showForm=false;renderForm();}},t('cancel')),
-        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:`linear-gradient(135deg,${T.acc},${T.acc2})`,color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:async()=>{
-          if(!txDesc||!txAmt){alert(t('fillFields'));return;}
-          try{
-            await api('POST','/transactions',{transactions:[{date:txDate,description:txDesc,amount:parseFloat(txAmt),category:txCat,type:txType}]});
-            showForm=false;APP_TAB='transactions';render();
-          }catch(e){alert(e.message);}
-        }},t('save'))
-      )
-    );
-    formBox.appendChild(form);
+        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontWeight:'700',cursor:'pointer'},onclick:()=>{showForm=false;renderForm();}},t('cancel')),
+        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:async()=>{
+          if(!txDesc||!txAmt)return alert(t('fillFields'));
+          try{await api('POST','/transactions',{transactions:[{date:txD,description:txDesc,amount:parseFloat(txAmt),category:txCat,type:txType,card_name:txCard,is_recurring:txRec}]});showForm=false;renderForm();loadTx();}catch(e){alert(e.message);}
+        }},t('save')))));
   }
-  renderForm();
-  container.appendChild(formBox);
-
-  // Transaction list
-  const listBox=h('div',{className:'fu'});
-  container.appendChild(listBox);
-  try{
-    const txns=await api('GET','/transactions');
-    if(!txns.length){
-      listBox.appendChild(h('div',{style:{textAlign:'center',padding:'40px',color:T.mut}},'📭 '+t('noData')));
-      return;
-    }
-    txns.forEach(tx=>{
-      const isIncome=tx.type==='income';
-      listBox.appendChild(h('div',{style:{background:T.card,borderRadius:'14px',padding:'14px 16px',border:'1px solid '+T.bdr,marginBottom:'8px',display:'flex',alignItems:'center',justifyContent:'space-between'}},
-        h('div',{style:{display:'flex',alignItems:'center',gap:'12px',flex:1,minWidth:0}},
-          h('div',{style:{width:'40px',height:'40px',borderRadius:'10px',background:isIncome?T.grn+'18':T.red+'18',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'16px',flexShrink:0}},isIncome?'↗':'↘'),
-          h('div',{style:{minWidth:0}},
-            h('div',{style:{fontSize:'13px',fontWeight:'700',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}},tx.description),
-            h('div',{style:{fontSize:'11px',color:T.mut}},tx.category+' · '+tx.date))
-        ),
-        h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},
-          h('div',{style:{fontSize:'14px',fontWeight:'700',color:isIncome?T.grn:T.red,whiteSpace:'nowrap'}},(isIncome?'+':'-')+'₪'+Number(tx.amount).toLocaleString()),
-          h('button',{style:{background:'none',border:'none',color:T.mut,cursor:'pointer',fontSize:'14px',padding:'4px'},onclick:async()=>{
-            if(confirm(t('delete')+'?')){try{await api('DELETE','/transactions/'+tx.id);APP_TAB='transactions';render();}catch(e){alert(e.message);}}
-          }},'✕')
-        )
-      ));
-    });
-  }catch(e){listBox.appendChild(errBox(e.message));}
+  renderForm();c.appendChild(formBox);c.appendChild(listBox);
+  async function loadTx(){
+    listBox.innerHTML='';
+    let url='/transactions?limit=100';
+    if(searchQ)url+=`&search=${encodeURIComponent(searchQ)}`;
+    if(filterType==='recurring')url+='&recurring=1';
+    else if(filterType)url+=`&type=${filterType}`;
+    try{
+      const txns=await api('GET',url);
+      if(!txns.length){listBox.appendChild(h('div',{style:{textAlign:'center',padding:'40px',color:'var(--mut)'}},'📭 '+t('noData')));return;}
+      txns.forEach(tx=>{
+        const isInc=tx.type==='income';
+        listBox.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'14px',padding:'12px 16px',border:'1px solid var(--bdr)',marginBottom:'8px',display:'flex',alignItems:'center',justifyContent:'space-between'}},
+          h('div',{style:{display:'flex',alignItems:'center',gap:'12px',flex:1,minWidth:0}},
+            h('div',{style:{width:'36px',height:'36px',borderRadius:'10px',background:isInc?'rgba(16,185,129,.12)':'rgba(239,68,68,.12)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'14px',flexShrink:0}},isInc?'↗':'↘'),
+            h('div',{style:{minWidth:0}},
+              h('div',{style:{fontSize:'13px',fontWeight:'700',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',display:'flex',alignItems:'center',gap:'6px'}},
+                tx.description,
+                tx.is_recurring?h('span',{style:{fontSize:'9px',padding:'1px 6px',borderRadius:'99px',background:'rgba(59,130,246,.15)',color:'var(--acc2)'}},'🔄'):null),
+              h('div',{style:{fontSize:'11px',color:'var(--mut)'}},tx.category+' · '+tx.date+(tx.card_name?' · '+tx.card_name:'')))),
+          h('div',{style:{display:'flex',alignItems:'center',gap:'8px'}},
+            h('div',{style:{fontSize:'13px',fontWeight:'700',color:isInc?'var(--grn)':'var(--red)',whiteSpace:'nowrap'}},(isInc?'+':'-')+'₪'+Number(tx.amount).toLocaleString()),
+            h('button',{style:{background:'none',border:'none',color:'var(--mut)',cursor:'pointer',fontSize:'12px',padding:'4px'},onclick:async()=>{
+              if(confirm(t('delete')+'?')){try{await api('DELETE','/transactions/'+tx.id);loadTx();}catch(e){alert(e.message);}}}},'✕'))));
+      });
+    }catch(e){listBox.appendChild(errBox(e.message));}
+  }
+  loadTx();
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  GOALS TAB
-// ═══════════════════════════════════════════════════════════════
-async function renderGoals(container){
-  let showForm=false;
-  const formBox=h('div',{style:{marginBottom:'20px'}});
+// ═══════════════════════════ BUDGETS TAB ═══════════════════════════
+async function renderBudgets(c){
+  const cats=['Food','Transport','Shopping','Entertainment','Bills','Health','Education','Salary','Freelance','Gift','Mortgage','Insurance','Subscription','Other'];
+  let showForm=false,editCat='';
+  const fb=h('div',{style:{marginBottom:'16px'}});
+  const lb=h('div',{className:'fu'});
+
+  async function loadBudgets(){
+    lb.innerHTML='';
+    try{
+      const budgets=await api('GET','/budgets');
+      const stats=await api('GET','/stats');
+      const catMap={};
+      if(stats.categories)stats.categories.forEach(c=>{catMap[c.category]=c.total;});
+
+      if(!Object.keys(budgets).length){
+        lb.appendChild(h('div',{style:{textAlign:'center',padding:'40px',color:'var(--mut)',background:'var(--card)',borderRadius:'16px',border:'1px solid var(--bdr)'}},
+          h('div',{style:{fontSize:'40px',marginBottom:'12px'}},'📋'),
+          h('div',{style:{fontSize:'15px',fontWeight:'700'}},t('noBudgets'))));
+        return;
+      }
+
+      Object.entries(budgets).sort((a,b)=>b[1]-a[1]).forEach(([cat,limit])=>{
+        const spent=catMap[cat]||0;
+        const pct=limit>0?Math.round(spent/limit*100):0;
+        const over=pct>100;const warn=pct>=80;
+        lb.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'18px',border:'1px solid '+(over?'rgba(239,68,68,.3)':warn?'rgba(245,158,11,.3)':'var(--bdr)'),marginBottom:'12px'}},
+          h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'10px'}},
+            h('div',{},
+              h('div',{style:{fontSize:'14px',fontWeight:'700'}},cat),
+              h('div',{style:{fontSize:'12px',color:'var(--mut)'}},'₪'+Number(spent).toLocaleString()+' / ₪'+Number(limit).toLocaleString())),
+            h('div',{style:{display:'flex',alignItems:'center',gap:'8px'}},
+              h('span',{style:{fontSize:'14px',fontWeight:'700',color:over?'var(--red)':warn?'var(--acc)':'var(--grn)'}},pct+'%'),
+              h('button',{style:{background:'none',border:'none',color:'var(--mut)',cursor:'pointer',fontSize:'12px'},
+                onclick:async()=>{if(confirm(t('removeBudget')+' '+cat+'?')){try{await api('POST','/budgets/delete',{category:cat});loadBudgets();}catch(e){alert(e.message);}}}},'✕'))),
+          h('div',{style:{width:'100%',height:'10px',borderRadius:'5px',background:'var(--card2)'}},
+            h('div',{style:{width:Math.min(pct,100)+'%',height:'100%',borderRadius:'5px',background:over?'var(--red)':warn?'var(--acc)':'var(--grn)',transition:'width .5s'}}))));
+      });
+    }catch(e){lb.appendChild(errBox(e.message));}
+  }
+
   function renderForm(){
-    formBox.innerHTML='';
+    fb.innerHTML='';
     if(!showForm){
-      formBox.appendChild(h('button',{style:{width:'100%',padding:'14px',borderRadius:'14px',background:T.card,border:'2px dashed '+T.bdr,color:T.acc,fontWeight:'700',fontSize:'14px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px'},onclick:()=>{showForm=true;renderForm();}},
-        h('span',{style:{fontSize:'18px'}},'+'), t('addGoal')));
+      fb.appendChild(h('button',{style:{width:'100%',padding:'14px',borderRadius:'14px',background:'var(--card)',border:'2px dashed var(--bdr)',color:'var(--acc)',fontWeight:'700',cursor:'pointer'},
+        onclick:()=>{showForm=true;renderForm();}},'+  '+t('addBudget')));
       return;
     }
-    let gName='',gTarget='',gIcon='🎯',gColor='#10B981';
-    const icons=['🎯','🏖','🚗','🏠','💻','🎓','💰','❤','✈','📱'];
-    const colors=['#10B981','#3B82F6','#F59E0B','#EF4444','#8B5CF6','#EC4899','#06B6D4','#F97316'];
-    const form=h('div',{style:{background:T.card,borderRadius:'16px',padding:'20px',border:'1px solid '+T.acc+'44'}},
-      h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'16px'}},t('addGoal')),
-      // Icon picker
-      h('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap',marginBottom:'12px'}},
-        ...icons.map(ic=>h('button',{style:{width:'40px',height:'40px',borderRadius:'10px',background:gIcon===ic?T.acc+'22':T.card2,border:'1px solid '+(gIcon===ic?T.acc:T.bdr),fontSize:'20px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'},onclick:()=>{gIcon=ic;renderForm();}},ic))),
-      inputField(t('goalName'),'text',gName,function(e){gName=e.target.value;}),
-      inputField(t('target'),'number',gTarget,function(e){gTarget=e.target.value;}),
-      // Color picker
-      h('div',{style:{display:'flex',gap:'6px',marginBottom:'16px'}},
-        ...colors.map(c=>h('button',{style:{width:'32px',height:'32px',borderRadius:'50%',background:c,border:gColor===c?'3px solid #fff':'3px solid transparent',cursor:'pointer'},onclick:()=>{gColor=c;renderForm();}}))),
+    let selCat=cats[0],amt='';
+    fb.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid rgba(245,158,11,.3)'}},
+      h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'14px'}},t('addBudget')),
+      h('select',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontSize:'14px',marginBottom:'12px'},
+        onchange:function(e){selCat=e.target.value;}},
+        ...cats.map(c=>h('option',{value:c,style:{background:'var(--card2)'}},c))),
+      inputField('₪ '+t('budgetAmount'),'number',amt,function(e){amt=e.target.value;}),
       h('div',{style:{display:'flex',gap:'8px'}},
-        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontWeight:'700',cursor:'pointer'},onclick:()=>{showForm=false;renderForm();}},t('cancel')),
-        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:`linear-gradient(135deg,${T.acc},${T.acc2})`,color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:async()=>{
-          if(!gName||!gTarget){alert(t('fillFields'));return;}
-          try{await api('POST','/goals',{name:gName,target:parseFloat(gTarget),icon:gIcon,color:gColor});showForm=false;APP_TAB='goals';render();}catch(e){alert(e.message);}
-        }},t('save'))
-      )
-    );
-    formBox.appendChild(form);
+        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontWeight:'700',cursor:'pointer'},
+          onclick:()=>{showForm=false;renderForm();}},t('cancel')),
+        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},
+          onclick:async()=>{
+            if(!amt)return alert(t('fillFields'));
+            try{await api('POST','/budgets',{budgets:{[selCat]:parseFloat(amt)}});showForm=false;renderForm();loadBudgets();}catch(e){alert(e.message);}
+          }},t('save')))));
   }
-  renderForm();
-  container.appendChild(formBox);
 
-  const listBox=h('div',{className:'fu'});
-  container.appendChild(listBox);
+  renderForm();c.appendChild(fb);c.appendChild(lb);loadBudgets();
+}
+
+// ═══════════════════════════ RECEIPT SCANNER ═══════════════════════════
+function receiptScannerBtn(onResult){
+  return h('button',{style:{width:'100%',padding:'14px',borderRadius:'14px',background:'var(--card)',border:'2px dashed var(--bdr)',color:'var(--acc2)',fontWeight:'700',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px',marginBottom:'12px'},
+    onclick:()=>{
+      const input=document.createElement('input');
+      input.type='file';input.accept='image/*';input.capture='environment';
+      input.onchange=async function(e){
+        if(!e.target.files.length)return;
+        const file=e.target.files[0];
+        const reader=new FileReader();
+        reader.onload=async function(ev){
+          const base64=ev.target.result;
+          // Show scanning state
+          const overlay=h('div',{className:'modal-overlay'},
+            h('div',{className:'modal-card',style:{textAlign:'center'}},
+              h('div',{className:'spinner',style:{width:'40px',height:'40px',margin:'0 auto 16px'}}),
+              h('div',{style:{fontSize:'16px',fontWeight:'700'}},t('scanning'))));
+          document.body.appendChild(overlay);
+          try{
+            const res=await api('POST','/scan-receipt',{image:base64});
+            overlay.remove();
+            if(res.transaction)onResult(res.transaction);
+            else alert('Could not read receipt');
+          }catch(err){overlay.remove();alert(err.message);}
+        };
+        reader.readAsDataURL(file);
+      };
+      input.click();
+    }},
+    h('span',{style:{fontSize:'18px'}},'📸'), t('scanReceipt'));
+}
+
+// ═══════════════════════════ UPLOAD ═══════════════════════════
+function renderUpload(c){
+  let parsed=null,headers=[],mapping={},fName='',importStatus='',importCount=0;
+  const tgt=['(skip)','date','description','amount','category','method','type','card_name'];
+  const w=h('div',{className:'fu'});c.appendChild(w);
+  function dr(){
+    w.innerHTML='';
+    if(!parsed){
+      const dz=h('div',{className:'drop-zone'},h('div',{style:{fontSize:'48px',marginBottom:'12px'}},'📁'),
+        h('div',{style:{fontSize:'16px',fontWeight:'700',marginBottom:'6px'}},t('uploadCsv')),
+        h('div',{style:{fontSize:'13px',color:'var(--mut)',marginBottom:'16px'}},t('uploadDesc')),
+        h('button',{style:{padding:'12px 28px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:()=>fi.click()},t('selectFile')));
+      dz.ondragover=e=>{e.preventDefault();dz.classList.add('drag-over');};
+      dz.ondragleave=()=>dz.classList.remove('drag-over');
+      dz.ondrop=e=>{e.preventDefault();dz.classList.remove('drag-over');if(e.dataTransfer.files.length)hf(e.dataTransfer.files[0]);};
+      const fi=h('input',{type:'file',accept:'.csv,.xls,.xlsx,.tsv',style:{display:'none'},onchange:function(e){if(e.target.files.length)hf(e.target.files[0]);}});
+      w.appendChild(dz);w.appendChild(fi);return;
+    }
+    w.appendChild(h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'16px'}},
+      h('div',{},h('div',{style:{fontSize:'16px',fontWeight:'700'}},fName),h('div',{style:{fontSize:'12px',color:'var(--mut)'}},parsed.length+' '+t('rows'))),
+      h('button',{style:{padding:'6px 16px',borderRadius:'8px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--mut)',fontSize:'12px',cursor:'pointer'},onclick:()=>{parsed=null;headers=[];mapping={};dr();}},'✕ Reset')));
+    const mc=h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'18px',border:'1px solid var(--bdr)',marginBottom:'16px'}},
+      h('div',{style:{fontSize:'14px',fontWeight:'700',marginBottom:'12px'}},t('columnMapping')));
+    headers.forEach(col=>{
+      mc.appendChild(h('div',{style:{display:'flex',alignItems:'center',gap:'10px',marginBottom:'8px'}},
+        h('div',{style:{flex:1,fontSize:'13px',fontWeight:'700',color:'var(--acc)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}},col),
+        h('span',{style:{color:'var(--mut)',fontSize:'12px'}},'→'),
+        h('select',{style:{flex:1,padding:'8px',borderRadius:'8px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontSize:'12px'},
+          onchange:function(e){mapping[col]=e.target.value;dr();}},
+          ...tgt.map(f=>h('option',{value:f,selected:mapping[col]===f,style:{background:'var(--card2)'}},f)))));
+    });
+    w.appendChild(mc);
+    if(!Object.keys(mapping).length){
+      headers.forEach(col=>{
+        const lc=col.toLowerCase().trim();
+        if(lc.includes('date')||lc.includes('תאריך'))mapping[col]='date';
+        else if(lc.includes('desc')||lc.includes('תיאור')||lc.includes('memo')||lc.includes('פירוט'))mapping[col]='description';
+        else if(lc.includes('amount')||lc.includes('sum')||lc.includes('סכום'))mapping[col]='amount';
+        else if(lc.includes('categ')||lc.includes('קטגוריה'))mapping[col]='category';
+        else if(lc.includes('card')||lc.includes('כרטיס'))mapping[col]='card_name';
+        else mapping[col]='(skip)';
+      });dr();return;
+    }
+    const mapped=headers.filter(c=>mapping[c]&&mapping[c]!=='(skip)');
+    if(mapped.length){
+      const pc=h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'14px',border:'1px solid var(--bdr)',marginBottom:'16px',overflowX:'auto'}},
+        h('div',{style:{fontSize:'13px',fontWeight:'700',marginBottom:'8px'}},t('preview')));
+      const tb=h('table',{className:'preview-table'}),th=h('tr');
+      mapped.forEach(c=>th.appendChild(h('th',{},mapping[c])));tb.appendChild(th);
+      parsed.slice(0,6).forEach(row=>{const tr=h('tr');mapped.forEach(c=>tr.appendChild(h('td',{},String(row[c]||''))));tb.appendChild(tr);});
+      pc.appendChild(tb);w.appendChild(pc);
+    }
+    const hasD=Object.values(mapping).includes('date'),hasA=Object.values(mapping).includes('amount');
+    if(importStatus==='done'){
+      w.appendChild(successBox(t('imported')+' '+importCount+' '+t('rows')));
+      w.appendChild(h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:()=>{APP_TAB='transactions';render();}},t('transactions')+' →'));
+    }else{
+      w.appendChild(h('button',{style:{width:'100%',padding:'14px',borderRadius:'14px',background:hasD&&hasA?'linear-gradient(135deg,var(--acc),var(--acc2))':'var(--card2)',color:hasD&&hasA?'#fff':'var(--mut)',fontWeight:'700',cursor:'pointer',opacity:importStatus==='importing'?'.7':'1'},
+        onclick:hasD&&hasA&&importStatus!=='importing'?doImport:null},importStatus==='importing'?t('importing'):t('importBtn')+' '+parsed.length+' '+t('rows')));
+    }
+  }
+  function hf(file){
+    fName=file.name;const reader=new FileReader();
+    reader.onload=function(e){try{
+      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true});
+      const json=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+      if(!json.length){alert('Empty file');return;}parsed=json;headers=Object.keys(json[0]);mapping={};dr();
+    }catch(err){alert('Error: '+err.message);}};reader.readAsArrayBuffer(file);
+  }
+  async function doImport(){
+    importStatus='importing';dr();
+    const txns=parsed.map(row=>{
+      const tx={};Object.entries(mapping).forEach(([col,field])=>{
+        if(field==='(skip)')return;let val=row[col];
+        if(field==='amount'){val=parseFloat(String(val).replace(/[^0-9.\-]/g,''))||0;if(val<0)val=Math.abs(val);}
+        if(field==='date'&&val instanceof Date)val=val.toISOString().slice(0,10);
+        else if(field==='date'){const d=new Date(val);val=isNaN(d)?String(val):d.toISOString().slice(0,10);}
+        tx[field]=val;});
+      if(!tx.type)tx.type='expense';if(!tx.description)tx.description='Imported';return tx;
+    }).filter(tx=>tx.date&&tx.amount);
+    try{const r=await api('POST','/transactions',{transactions:txns});importCount=r.count||txns.length;importStatus='done';dr();}
+    catch(e){importStatus='';alert(e.message);dr();}
+  }
+  dr();
+}
+
+// ═══════════════════════════ AI AGENT ═══════════════════════════
+function renderAI(c){
+  const w=h('div',{style:{display:'flex',flexDirection:'column',height:IS_MOBILE?'calc(100vh - 180px)':'calc(100vh - 160px)'},className:'fu'});c.appendChild(w);
+  w.appendChild(h('div',{style:{marginBottom:'12px'}},
+    h('div',{style:{fontSize:'16px',fontWeight:'700',display:'flex',alignItems:'center',gap:'8px'}},
+      h('span',{style:{width:'28px',height:'28px',borderRadius:'8px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:'14px',color:'#fff'}},'✦'),t('aiAgent')),
+    h('div',{style:{fontSize:'12px',color:'var(--mut)',marginTop:'2px'}},t('aiDesc'))));
+  const md=h('div',{className:'chat-messages'});
+  if(!AI_HISTORY.length)md.appendChild(h('div',{className:'chat-msg assistant'},t('aiWelcome')));
+  AI_HISTORY.forEach(m=>md.appendChild(h('div',{className:'chat-msg '+m.role},m.content)));
+  w.appendChild(md);setTimeout(()=>{md.scrollTop=md.scrollHeight;},50);
+  let iv='',sending=false;
+  const iw=h('div',{className:'chat-input-wrap',style:{marginTop:'auto'}});
+  const ta=h('textarea',{placeholder:t('aiPlaceholder'),rows:'1',
+    oninput:function(e){iv=e.target.value;this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';},
+    onkeydown:function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend();}}});
+  iw.appendChild(ta);
+  iw.appendChild(h('button',{style:{width:'48px',height:'48px',borderRadius:'14px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',fontSize:'18px',cursor:'pointer',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'},onclick:doSend},'→'));
+  w.appendChild(iw);
+  async function doSend(){
+    const msg=iv.trim()||ta.value.trim();if(!msg||sending)return;sending=true;
+    AI_HISTORY.push({role:'user',content:msg});md.appendChild(h('div',{className:'chat-msg user'},msg));
+    ta.value='';iv='';ta.style.height='48px';
+    const th=h('div',{className:'chat-msg assistant',style:{opacity:'.6',animation:'pulse 1.5s ease infinite'}},t('aiThinking'));
+    md.appendChild(th);md.scrollTop=md.scrollHeight;
+    try{const r=await api('POST','/ai-chat',{message:msg,history:AI_HISTORY.slice(0,-1)});th.remove();
+      AI_HISTORY.push({role:'assistant',content:r.reply});md.appendChild(h('div',{className:'chat-msg assistant'},r.reply));
+    }catch(e){th.remove();md.appendChild(h('div',{className:'chat-msg assistant',style:{borderColor:'var(--red)',color:'var(--red)'}},e.message));}
+    md.scrollTop=md.scrollHeight;sending=false;
+  }
+}
+
+// ═══════════════════════════ CARDS ═══════════════════════════
+async function renderCards(c){
+  let showForm=false;
+  const fb=h('div',{style:{marginBottom:'16px'}});
+  function rf(){
+    fb.innerHTML='';
+    if(!showForm){fb.appendChild(h('button',{style:{width:'100%',padding:'14px',borderRadius:'14px',background:'var(--card)',border:'2px dashed var(--bdr)',color:'var(--acc)',fontWeight:'700',cursor:'pointer'},onclick:()=>{showForm=true;rf();}},'+  '+t('addCard')));return;}
+    let cn='',lf='',cc='#3B82F6',ct='credit';
+    const colors=['#3B82F6','#EF4444','#10B981','#F59E0B','#8B5CF6','#EC4899','#06B6D4'];
+    fb.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid rgba(245,158,11,.3)'}},
+      h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'14px'}},t('addCard')),
+      inputField(t('cardName'),'text',cn,function(e){cn=e.target.value;}),
+      inputField(t('lastFour'),'text',lf,function(e){lf=e.target.value.replace(/\D/g,'').slice(0,4);}),
+      h('div',{style:{display:'flex',gap:'6px',marginBottom:'16px'}},...colors.map(cl=>h('button',{style:{width:'32px',height:'32px',borderRadius:'50%',background:cl,border:cc===cl?'3px solid var(--txt)':'3px solid transparent',cursor:'pointer'},onclick:()=>{cc=cl;rf();}}))),
+      h('div',{style:{display:'flex',gap:'8px'}},
+        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontWeight:'700',cursor:'pointer'},onclick:()=>{showForm=false;rf();}},t('cancel')),
+        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:async()=>{
+          if(!cn)return alert(t('fillFields'));try{await api('POST','/cards',{name:cn,last_four:lf,color:cc,card_type:ct});showForm=false;APP_TAB='cards';render();}catch(e){alert(e.message);}
+        }},t('save')))));
+  }
+  rf();c.appendChild(fb);
+  const lb=h('div',{className:'fu'});c.appendChild(lb);
+  try{
+    const cards=await api('GET','/cards');
+    if(!cards.length){lb.appendChild(h('div',{style:{textAlign:'center',padding:'40px',color:'var(--mut)'}},'💳 '+t('noCards')));return;}
+    cards.forEach(card=>{
+      lb.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'18px',border:'1px solid var(--bdr)',marginBottom:'12px',borderLeft:'4px solid '+card.color}},
+        h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center'}},
+          h('div',{},
+            h('div',{style:{fontSize:'15px',fontWeight:'700'}},card.name),
+            h('div',{style:{fontSize:'12px',color:'var(--mut)'}},card.last_four?'•••• '+card.last_four:card.card_type)),
+          h('button',{style:{background:'none',border:'none',color:'var(--mut)',cursor:'pointer',fontSize:'14px'},onclick:async()=>{
+            if(confirm(t('delete')+'?')){try{await api('DELETE','/cards/'+card.id);APP_TAB='cards';render();}catch(e){alert(e.message);}}}},'✕'))));
+    });
+  }catch(e){lb.appendChild(errBox(e.message));}
+}
+
+// ═══════════════════════════ GOALS ═══════════════════════════
+async function renderGoals(c){
+  let showForm=false;const fb=h('div',{style:{marginBottom:'16px'}});
+  function rf(){
+    fb.innerHTML='';
+    if(!showForm){fb.appendChild(h('button',{style:{width:'100%',padding:'14px',borderRadius:'14px',background:'var(--card)',border:'2px dashed var(--bdr)',color:'var(--acc)',fontWeight:'700',cursor:'pointer'},onclick:()=>{showForm=true;rf();}},'+  '+t('addGoal')));return;}
+    let gn='',gt='',gi='🎯',gc='#10B981';
+    const icons=['🎯','🏖','🚗','🏠','💻','🎓','💰','❤','✈','📱'];
+    const colors=['#10B981','#3B82F6','#F59E0B','#EF4444','#8B5CF6','#EC4899','#06B6D4'];
+    fb.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid rgba(245,158,11,.3)'}},
+      h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'14px'}},t('addGoal')),
+      h('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap',marginBottom:'12px'}},...icons.map(ic=>h('button',{style:{width:'40px',height:'40px',borderRadius:'10px',background:gi===ic?'rgba(245,158,11,.15)':'var(--card2)',border:'1px solid '+(gi===ic?'var(--acc)':'var(--bdr)'),fontSize:'20px',cursor:'pointer'},onclick:()=>{gi=ic;rf();}},ic))),
+      inputField(t('goalName'),'text',gn,function(e){gn=e.target.value;}),
+      inputField(t('target'),'number',gt,function(e){gt=e.target.value;}),
+      h('div',{style:{display:'flex',gap:'6px',marginBottom:'16px'}},...colors.map(cl=>h('button',{style:{width:'32px',height:'32px',borderRadius:'50%',background:cl,border:gc===cl?'3px solid var(--txt)':'3px solid transparent',cursor:'pointer'},onclick:()=>{gc=cl;rf();}}))),
+      h('div',{style:{display:'flex',gap:'8px'}},
+        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontWeight:'700',cursor:'pointer'},onclick:()=>{showForm=false;rf();}},t('cancel')),
+        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:async()=>{
+          if(!gn||!gt)return alert(t('fillFields'));try{await api('POST','/goals',{name:gn,target:parseFloat(gt),icon:gi,color:gc});showForm=false;APP_TAB='goals';render();}catch(e){alert(e.message);}
+        }},t('save')))));
+  }
+  rf();c.appendChild(fb);
+  const lb=h('div',{className:'fu'});c.appendChild(lb);
   try{
     const goals=await api('GET','/goals');
-    if(!goals.length){
-      listBox.appendChild(h('div',{style:{textAlign:'center',padding:'40px',color:T.mut}},'🎯 '+t('noData')));
-      return;
-    }
+    if(!goals.length){lb.appendChild(h('div',{style:{textAlign:'center',padding:'40px',color:'var(--mut)'}},'🎯 '+t('noData')));return;}
     goals.forEach(g=>{
       const pct=g.target>0?Math.min(Math.round(g.saved/g.target*100),100):0;
-      const card=h('div',{style:{background:T.card,borderRadius:'16px',padding:'18px',border:'1px solid '+T.bdr,marginBottom:'12px'}},
-        h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}},
-          h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},
-            h('span',{style:{fontSize:'24px'}},g.icon),
-            h('div',{},h('div',{style:{fontSize:'14px',fontWeight:'700'}},g.name),
-              h('div',{style:{fontSize:'11px',color:T.mut}},'₪'+Number(g.saved).toLocaleString()+' / ₪'+Number(g.target).toLocaleString()))),
+      lb.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'18px',border:'1px solid var(--bdr)',marginBottom:'12px'}},
+        h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'10px'}},
+          h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},h('span',{style:{fontSize:'24px'}},g.icon),
+            h('div',{},h('div',{style:{fontSize:'14px',fontWeight:'700'}},g.name),h('div',{style:{fontSize:'11px',color:'var(--mut)'}},'₪'+Number(g.saved).toLocaleString()+' / ₪'+Number(g.target).toLocaleString()))),
           h('div',{style:{display:'flex',gap:'6px'}},
-            h('button',{style:{padding:'6px 10px',borderRadius:'8px',background:T.grn+'18',border:'1px solid '+T.grn+'33',color:T.grn,fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:async()=>{
-              const amt=prompt(t('amount'));if(amt&&!isNaN(amt)){try{await api('PUT','/goals/'+g.id,{saved:g.saved+parseFloat(amt)});APP_TAB='goals';render();}catch(e){alert(e.message);}}
+            h('button',{style:{padding:'6px 10px',borderRadius:'8px',background:'rgba(16,185,129,.12)',border:'1px solid rgba(16,185,129,.2)',color:'var(--grn)',fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:async()=>{
+              const a=prompt(t('amount'));if(a&&!isNaN(a)){try{await api('PUT','/goals/'+g.id,{saved:g.saved+parseFloat(a)});APP_TAB='goals';render();}catch(e){alert(e.message);}}
             }},'+'),
-            h('button',{style:{background:'none',border:'none',color:T.mut,cursor:'pointer',fontSize:'13px'},onclick:async()=>{
-              if(confirm(t('delete')+'?')){try{await api('DELETE','/goals/'+g.id);APP_TAB='goals';render();}catch(e){alert(e.message);}}
-            }},'✕'))
-        ),
-        h('div',{style:{width:'100%',height:'10px',borderRadius:'5px',background:T.card2}},
-          h('div',{style:{width:pct+'%',height:'100%',borderRadius:'5px',background:g.color||T.grn,transition:'width .5s ease'}})),
-        h('div',{style:{textAlign:'right',fontSize:'12px',fontWeight:'700',color:g.color||T.grn,marginTop:'4px'}},pct+'%')
-      );
-      listBox.appendChild(card);
+            h('button',{style:{background:'none',border:'none',color:'var(--mut)',cursor:'pointer',fontSize:'12px'},onclick:async()=>{
+              if(confirm(t('delete')+'?')){try{await api('DELETE','/goals/'+g.id);APP_TAB='goals';render();}catch(e){alert(e.message);}}}},'✕'))),
+        h('div',{style:{width:'100%',height:'10px',borderRadius:'5px',background:'var(--card2)'}},h('div',{style:{width:pct+'%',height:'100%',borderRadius:'5px',background:g.color||'var(--grn)'}})),
+        h('div',{style:{textAlign:'right',fontSize:'12px',fontWeight:'700',color:g.color||'var(--grn)',marginTop:'4px'}},pct+'%')));
     });
-  }catch(e){listBox.appendChild(errBox(e.message));}
+  }catch(e){lb.appendChild(errBox(e.message));}
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  SETTINGS TAB
-// ═══════════════════════════════════════════════════════════════
-function renderSettings(container){
-  const card=h('div',{style:{background:T.card,borderRadius:'16px',padding:'20px',border:'1px solid '+T.bdr,marginBottom:'16px'},className:'fu'},
-    h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'16px'}},t('language')),
+// ═══════════════════════════ SETTINGS ═══════════════════════════
+function renderSettings(c){
+  // Language
+  c.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid var(--bdr)',marginBottom:'14px'},className:'fu'},
+    h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'14px'}},t('language')),
     h('div',{style:{display:'flex',gap:'8px'}},
-      h('button',{style:{flex:1,padding:'14px',borderRadius:'12px',background:(USER?.lang||'en')==='en'?T.acc2+'22':T.card2,border:'1px solid '+((USER?.lang||'en')==='en'?T.acc2:T.bdr),color:(USER?.lang||'en')==='en'?T.acc2:T.mut,fontWeight:'700',fontSize:'14px',cursor:'pointer'},onclick:async()=>{
-        try{await api('POST','/update-profile',{lang:'en'});USER.lang='en';saveSession();render();}catch(e){alert(e.message);}
-      }},'English'),
-      h('button',{style:{flex:1,padding:'14px',borderRadius:'12px',background:(USER?.lang||'en')==='he'?T.acc2+'22':T.card2,border:'1px solid '+((USER?.lang||'en')==='he'?T.acc2:T.bdr),color:(USER?.lang||'en')==='he'?T.acc2:T.mut,fontWeight:'700',fontSize:'14px',cursor:'pointer'},onclick:async()=>{
-        try{await api('POST','/update-profile',{lang:'he'});USER.lang='he';saveSession();render();}catch(e){alert(e.message);}
-      }},'עברית')
-    )
-  );
-  container.appendChild(card);
-
-  // Replay tour button
-  container.appendChild(h('div',{style:{background:T.card,borderRadius:'16px',padding:'20px',border:'1px solid '+T.bdr,marginBottom:'16px'},className:'fu'},
-    h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'12px'}},USER?.lang==='he'?'סיור באפליקציה':'App Tour'),
-    h('button',{style:{width:'100%',padding:'12px',borderRadius:'12px',background:T.acc+'18',border:'1px solid '+T.acc+'33',color:T.acc,fontWeight:'700',cursor:'pointer'},onclick:()=>showTour()},USER?.lang==='he'?'הפעל סיור מחדש':'Replay Tour')
-  ));
-
-  // Profile
-  container.appendChild(h('div',{style:{background:T.card,borderRadius:'16px',padding:'20px',border:'1px solid '+T.bdr},className:'fu'},
-    h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'16px'}},t('profile')),
-    h('div',{style:{display:'flex',alignItems:'center',gap:'14px'}},
-      h('div',{style:{width:'52px',height:'52px',borderRadius:'14px',background:`linear-gradient(135deg,${T.acc},${T.acc2})`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'22px',fontWeight:'700',color:'#fff'}},(USER?.display_name||USER?.username||'?')[0].toUpperCase()),
-      h('div',{},
-        h('div',{style:{fontSize:'16px',fontWeight:'700'}},USER?.display_name||USER?.username),
-        h('div',{style:{fontSize:'12px',color:T.mut}},'@'+(USER?.username||'')))
-    )
-  ));
+      h('button',{style:{flex:1,padding:'14px',borderRadius:'12px',background:(USER?.lang||'en')==='en'?'rgba(59,130,246,.15)':'var(--card2)',border:'1px solid '+((USER?.lang||'en')==='en'?'var(--acc2)':'var(--bdr)'),color:(USER?.lang||'en')==='en'?'var(--acc2)':'var(--mut)',fontWeight:'700',cursor:'pointer'},onclick:async()=>{try{await api('POST','/update-profile',{lang:'en'});USER.lang='en';saveSession();render();}catch(e){alert(e.message);}}},'English'),
+      h('button',{style:{flex:1,padding:'14px',borderRadius:'12px',background:(USER?.lang||'en')==='he'?'rgba(59,130,246,.15)':'var(--card2)',border:'1px solid '+((USER?.lang||'en')==='he'?'var(--acc2)':'var(--bdr)'),color:(USER?.lang||'en')==='he'?'var(--acc2)':'var(--mut)',fontWeight:'700',cursor:'pointer'},onclick:async()=>{try{await api('POST','/update-profile',{lang:'he'});USER.lang='he';saveSession();render();}catch(e){alert(e.message);}}},'עברית'))));
+  // Theme
+  c.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid var(--bdr)',marginBottom:'14px'},className:'fu'},
+    h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'14px'}},t('theme')),
+    h('div',{style:{display:'flex',gap:'8px'}},
+      h('button',{style:{flex:1,padding:'14px',borderRadius:'12px',background:THEME==='dark'?'rgba(245,158,11,.15)':'var(--card2)',border:'1px solid '+(THEME==='dark'?'var(--acc)':'var(--bdr)'),color:THEME==='dark'?'var(--acc)':'var(--mut)',fontWeight:'700',cursor:'pointer'},onclick:()=>{setTheme('dark');render();}},'🌙 '+t('dark')),
+      h('button',{style:{flex:1,padding:'14px',borderRadius:'12px',background:THEME==='light'?'rgba(245,158,11,.15)':'var(--card2)',border:'1px solid '+(THEME==='light'?'var(--acc)':'var(--bdr)'),color:THEME==='light'?'var(--acc)':'var(--mut)',fontWeight:'700',cursor:'pointer'},onclick:()=>{setTheme('light');render();}},'☀ '+t('light')))));
+  // Change password
+  c.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid var(--bdr)',marginBottom:'14px'},className:'fu'},
+    h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'14px'}},t('changePw')),
+    (()=>{let oldP='',newP='',msg='';const box=h('div');
+      function dr(){box.innerHTML='';
+        box.appendChild(passwordField(t('currentPw'),oldP,function(e){oldP=e.target.value;}));
+        box.appendChild(passwordField(t('newPw'),newP,function(e){newP=e.target.value;}));
+        if(msg)box.appendChild(successBox(msg));
+        box.appendChild(h('button',{style:{width:'100%',padding:'12px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:async()=>{
+          try{await api('POST','/change-password',{old_password:oldP,new_password:newP});msg=t('pwChanged');oldP='';newP='';dr();}catch(e){alert(e.message);}
+        }},t('save')));}dr();return box;})()));
+  // Tour + Onboarding
+  c.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid var(--bdr)',marginBottom:'14px',display:'flex',gap:'8px'},className:'fu'},
+    h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'rgba(245,158,11,.12)',border:'1px solid rgba(245,158,11,.2)',color:'var(--acc)',fontWeight:'700',cursor:'pointer'},onclick:()=>showTour()},t('replayTour')),
+    h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'rgba(59,130,246,.12)',border:'1px solid rgba(59,130,246,.2)',color:'var(--acc2)',fontWeight:'700',cursor:'pointer'},onclick:()=>showOnboarding(true)},t('updateOnboarding'))));
+  // Export
+  c.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid var(--bdr)',marginBottom:'14px'},className:'fu'},
+    h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'4px'}},t('exportData')),
+    h('div',{style:{fontSize:'12px',color:'var(--mut)',marginBottom:'14px'}},t('exportDesc')),
+    h('button',{style:{width:'100%',padding:'12px',borderRadius:'12px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontWeight:'700',cursor:'pointer'},
+      onclick:()=>{window.open(API+'/export?token='+TOKEN,'_blank');}},t('exportBtn'))));
+  // Household
+  c.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid var(--bdr)',marginBottom:'14px'},className:'fu'},
+    h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'14px'}},'🏠 '+t('household')),
+    (()=>{
+      const box=h('div');
+      // Check if user is in a household by loading stats
+      api('GET','/stats').then(s=>{
+        if(s.household){
+          box.appendChild(h('div',{style:{marginBottom:'12px'}},
+            h('div',{style:{fontSize:'14px',fontWeight:'700',marginBottom:'4px'}},s.household.name),
+            h('div',{style:{fontSize:'12px',color:'var(--mut)',marginBottom:'8px'}},t('inviteCode')+': '+s.household.invite_code),
+            h('div',{style:{fontSize:'12px',color:'var(--mut)',marginBottom:'12px'}},t('householdMembers')+': '+s.household.members.map(m=>m.name).join(', '))));
+          box.appendChild(h('button',{style:{width:'100%',padding:'10px',borderRadius:'10px',background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.2)',color:'var(--red)',fontWeight:'700',fontSize:'13px',cursor:'pointer'},
+            onclick:async()=>{if(confirm(t('leaveHousehold')+'?')){try{await api('POST','/household/leave');render();}catch(e){alert(e.message);}}}},t('leaveHousehold')));
+        } else {
+          let hhName='',joinCode='';
+          box.appendChild(h('div',{style:{display:'flex',gap:'8px',marginBottom:'12px'}},
+            h('div',{style:{flex:1}},
+              inputField(t('householdName'),'text',hhName,function(e){hhName=e.target.value;}),
+              h('button',{style:{width:'100%',padding:'10px',borderRadius:'10px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',fontSize:'13px',cursor:'pointer'},
+                onclick:async()=>{if(!hhName)return;try{const r=await api('POST','/household/create',{name:hhName});alert(t('inviteCode')+': '+r.invite_code);render();}catch(e){alert(e.message);}}},t('createHousehold'))),
+            h('div',{style:{flex:1}},
+              inputField(t('inviteCode'),'text',joinCode,function(e){joinCode=e.target.value;}),
+              h('button',{style:{width:'100%',padding:'10px',borderRadius:'10px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontWeight:'700',fontSize:'13px',cursor:'pointer'},
+                onclick:async()=>{if(!joinCode)return;try{const r=await api('POST','/household/join',{invite_code:joinCode});alert('Joined: '+r.household_name);render();}catch(e){alert(e.message);}}},t('joinHousehold')))));
+        }
+      }).catch(()=>{});
+      return box;
+    })()));
+  // Delete account
+  c.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid rgba(239,68,68,.3)'},className:'fu'},
+    h('div',{style:{fontSize:'15px',fontWeight:'700',color:'var(--red)',marginBottom:'4px'}},t('deleteAccount')),
+    h('div',{style:{fontSize:'12px',color:'var(--mut)',marginBottom:'14px'}},t('deleteDesc')),
+    (()=>{let reason='';const box=h('div');
+      box.appendChild(inputField(t('deleteReason'),'text',reason,function(e){reason=e.target.value;}));
+      box.appendChild(h('button',{style:{width:'100%',padding:'12px',borderRadius:'12px',background:'var(--red)',color:'#fff',fontWeight:'700',cursor:'pointer'},
+        onclick:async()=>{if(confirm(t('deleteAccount')+'?')){try{await api('POST','/request-deletion',{reason});alert(t('deletePending'));}catch(e){alert(e.message);}}}}
+      ,t('deleteRequest')));return box;})()));
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  ADMIN PANEL
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════ ADMIN ═══════════════════════════
 async function renderAdmin(app){
-  app.innerHTML='';
-  const dir=isRTL()?'rtl':'ltr';
-  const page=h('div',{style:{minHeight:'100vh',background:T.bg,direction:dir}});
-
-  // Header
-  page.appendChild(h('div',{style:{background:T.glass,borderBottom:'1px solid '+T.bdr,padding:'calc(var(--st) + 10px) 16px 12px',display:'flex',alignItems:'center',justifyContent:'space-between',backdropFilter:'blur(16px)'}},
+  app.innerHTML='';const dir=isRTL()?'rtl':'ltr';
+  const page=h('div',{style:{minHeight:'100vh',background:'var(--bg)',direction:dir}});
+  page.appendChild(h('div',{style:{background:'var(--glass)',borderBottom:'1px solid var(--bdr)',padding:'calc(var(--st) + 10px) 16px 12px',display:'flex',alignItems:'center',justifyContent:'space-between',backdropFilter:'blur(16px)'}},
     h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},
-      h('div',{style:{width:'34px',height:'34px',borderRadius:'10px',background:`linear-gradient(135deg,${T.red},${T.acc})`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'14px',fontWeight:'700',color:'#fff'}},'⚙'),
-      h('div',{},h('div',{style:{fontSize:'16px',fontWeight:'700'}},t('adminPanel')),h('div',{style:{fontSize:'10px',color:T.mut}},t('userMgmt')))),
+      h('div',{style:{width:'34px',height:'34px',borderRadius:'10px',background:'linear-gradient(135deg,var(--red),var(--acc))',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'14px',color:'#fff'}},'⚙'),
+      h('div',{},h('div',{style:{fontSize:'16px',fontWeight:'700'}},t('adminPanel')),h('div',{style:{fontSize:'10px',color:'var(--mut)'}},t('userMgmt')))),
     h('div',{style:{display:'flex',gap:'8px'}},
-      h('button',{style:{padding:'6px 12px',borderRadius:'8px',background:T.acc+'22',border:'1px solid '+T.acc+'44',color:T.acc,fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:()=>{VIEW='app';render();}},t('app')),
-      h('button',{style:{padding:'6px 12px',borderRadius:'8px',background:T.red+'22',border:'1px solid '+T.red+'44',color:T.red,fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:()=>{clearSession();VIEW='login';render();}},t('signOut')))
-  ));
-
+      h('button',{style:{padding:'6px 12px',borderRadius:'8px',background:'rgba(245,158,11,.12)',border:'1px solid rgba(245,158,11,.2)',color:'var(--acc)',fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:()=>{VIEW='app';render();}},t('app')),
+      h('button',{style:{padding:'6px 12px',borderRadius:'8px',background:'rgba(239,68,68,.12)',border:'1px solid rgba(239,68,68,.2)',color:'var(--red)',fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:()=>{clearSession();VIEW='login';render();}},t('signOut')))));
   const main=h('div',{style:{padding:'20px 16px calc(20px + var(--sb))',maxWidth:'700px',margin:'0 auto'},className:'fu'});
-
-  // ─── Global Settings (API Key) ────────────────────────────
-  const settingsCard=h('div',{style:{background:T.card,borderRadius:'16px',padding:'20px',border:'1px solid '+T.bdr,marginBottom:'20px'}},
-    h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'4px'}},t('globalSettings')),
-    h('div',{style:{fontSize:'11px',color:T.mut,marginBottom:'16px'}},t('apiKeyDesc'))
-  );
-  try{
-    const settings=await api('GET','/admin/settings');
-    let aiKey=settings.global_ai_key||'';
-    let currency=settings.currency||'₪';
-    const keyWrap=h('div',{className:'pw-wrap',style:{marginBottom:'12px'}});
-    const keyInp=h('input',{type:'password',placeholder:t('apiKey'),value:aiKey,
-      style:{width:'100%',padding:'14px 16px',paddingRight:'48px',borderRadius:'12px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontSize:'14px',fontFamily:'monospace'},
-      oninput:function(e){aiKey=e.target.value;}});
-    const keyToggle=h('button',{className:'pw-toggle',onclick:()=>{const s=keyInp.type==='password';keyInp.type=s?'text':'password';keyToggle.textContent=s?'🙈':'👁';}},
-      '👁');
-    keyWrap.appendChild(keyInp);keyWrap.appendChild(keyToggle);
-    settingsCard.appendChild(keyWrap);
-    settingsCard.appendChild(inputField(t('currency'),'text',currency,function(e){currency=e.target.value;}));
-    const saveBtn=h('button',{style:{width:'100%',padding:'12px',borderRadius:'12px',background:`linear-gradient(135deg,${T.acc},${T.acc2})`,color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:async()=>{
-      saveBtn.textContent=t('savingSettings');
-      try{await api('POST','/admin/settings',{global_ai_key:aiKey,currency});saveBtn.textContent=t('settingsSaved');setTimeout(()=>{saveBtn.textContent=t('save');},2000);}
-      catch(e){alert(e.message);saveBtn.textContent=t('save');}
-    }},t('save'));
-    settingsCard.appendChild(saveBtn);
-  }catch(e){settingsCard.appendChild(errBox(e.message));}
-  main.appendChild(settingsCard);
-
-  // ─── Users ────────────────────────────────────────────────
+  // Global settings
+  const u=USER;const isMaster=u?.role==='master_admin';const isAdm=u?.role==='master_admin'||u?.role==='admin';
+  if(isAdm){
+    const sc=h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid var(--bdr)',marginBottom:'20px'}},
+      h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'4px'}},t('globalSettings')),
+      h('div',{style:{fontSize:'11px',color:'var(--mut)',marginBottom:'14px'}},t('apiKeyDesc')));
+    try{
+      const settings=await api('GET','/admin/settings');let aiKey=settings.global_ai_key||'',cur=settings.currency||'₪';
+      const kw=h('div',{className:'pw-wrap',style:{marginBottom:'12px'}});
+      const ki=h('input',{type:'password',placeholder:t('apiKey'),value:aiKey,style:{width:'100%',padding:'14px 16px',paddingRight:'48px',borderRadius:'12px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontSize:'14px',fontFamily:'monospace'},oninput:function(e){aiKey=e.target.value;}});
+      const kt=h('button',{className:'pw-toggle',onclick:()=>{const s=ki.type==='password';ki.type=s?'text':'password';kt.textContent=s?'🙈':'👁';}},'👁');
+      kw.appendChild(ki);kw.appendChild(kt);sc.appendChild(kw);
+      sc.appendChild(inputField(t('currency'),'text',cur,function(e){cur=e.target.value;}));
+      const sb=h('button',{style:{width:'100%',padding:'12px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},
+        onclick:async()=>{sb.textContent=t('savingSettings');try{await api('POST','/admin/settings',{global_ai_key:aiKey,currency:cur});sb.textContent=t('settingsSaved');setTimeout(()=>{sb.textContent=t('save');},2000);}catch(e){alert(e.message);sb.textContent=t('save');}}},t('save'));
+      sc.appendChild(sb);
+    }catch(e){sc.appendChild(errBox(e.message));}
+    main.appendChild(sc);
+  }
+  // Deletion requests
+  if(isAdm){
+    try{
+      const dr=await api('GET','/admin/deletion-requests');
+      if(dr.length){
+        const dc=h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid rgba(239,68,68,.3)',marginBottom:'20px'}},
+          h('div',{style:{fontSize:'15px',fontWeight:'700',color:'var(--red)',marginBottom:'12px'}},'🗑 '+t('deletionRequests')+' ('+dr.length+')'));
+        dr.forEach(r=>{
+          dc.appendChild(h('div',{style:{padding:'12px',background:'var(--card2)',borderRadius:'12px',marginBottom:'8px',border:'1px solid var(--bdr)'}},
+            h('div',{style:{fontSize:'13px',fontWeight:'700',marginBottom:'4px'}},r.display_name||r.username),
+            h('div',{style:{fontSize:'11px',color:'var(--mut)',marginBottom:'8px'}},r.reason||'No reason'),
+            h('div',{style:{display:'flex',gap:'6px'}},
+              h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:'var(--red)',color:'#fff',fontWeight:'700',fontSize:'11px',cursor:'pointer'},
+                onclick:async()=>{if(confirm('Delete user '+r.username+' and all their data?')){try{await api('POST','/admin/resolve-deletion',{request_id:r.id,action:'approve'});VIEW='admin';render();}catch(e){alert(e.message);}}}},t('approveDelete')),
+              h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--mut)',fontWeight:'700',fontSize:'11px',cursor:'pointer'},
+                onclick:async()=>{try{await api('POST','/admin/resolve-deletion',{request_id:r.id,action:'reject'});VIEW='admin';render();}catch(e){alert(e.message);}}},' '+t('rejectDelete')))));
+        });
+        main.appendChild(dc);
+      }
+    }catch(e){}
+  }
+  // Users
   let users=[];
   try{users=await api('GET','/admin/users');}catch(e){main.appendChild(errBox(e.message));}
-  const pending=users.filter(u=>!u.is_approved);
-  const active=users.filter(u=>u.is_approved&&u.is_active);
-  const inactive=users.filter(u=>u.is_approved&&!u.is_active);
-
+  const pending=users.filter(u=>!u.is_approved),active=users.filter(u=>u.is_approved&&u.is_active),inactive=users.filter(u=>u.is_approved&&!u.is_active);
   main.appendChild(h('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'10px',marginBottom:'20px'}},
-    statCard(t('active'),String(active.length),T.grn),
-    statCard(t('pending'),String(pending.length),T.acc),
-    statCard(t('inactive'),String(inactive.length),T.red)));
-
-  if(pending.length){
-    main.appendChild(h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'10px',color:T.acc,display:'flex',alignItems:'center',gap:'8px'}},
-      h('span',{style:{width:'8px',height:'8px',borderRadius:'99px',background:T.acc,display:'inline-block'}}),t('pending')+' ('+pending.length+')'));
-    pending.forEach(u=>main.appendChild(userCard(u,'pending')));
+    statCard(t('active'),String(active.length),'var(--grn)'),statCard(t('pending'),String(pending.length),'var(--acc)'),statCard(t('inactive'),String(inactive.length),'var(--red)')));
+  function uCard(u,status){
+    const im=u.role==='master_admin';
+    const card=h('div',{style:{background:'var(--card)',borderRadius:'14px',padding:'14px',border:'1px solid var(--bdr)',marginBottom:'10px'}},
+      h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}},
+        h('div',{},
+          h('div',{style:{fontSize:'14px',fontWeight:'700',display:'flex',alignItems:'center',gap:'6px',flexWrap:'wrap'}},
+            u.display_name||u.username,
+            h('span',{className:'alert-badge',style:{background:u.role==='master_admin'?'rgba(239,68,68,.15)':u.role==='admin'?'rgba(59,130,246,.15)':u.role==='moderator'?'rgba(245,158,11,.15)':'rgba(90,106,138,.15)',
+              color:u.role==='master_admin'?'var(--red)':u.role==='admin'?'var(--acc2)':u.role==='moderator'?'var(--acc)':'var(--mut)'}},u.role)),
+          h('div',{style:{fontSize:'11px',color:'var(--mut)',marginTop:'2px'}},'@'+u.username+' · '+u.created_at?.split('T')[0]+(u.last_login?' · Last: '+u.last_login.split('T')[0]:''))),
+        h('div',{style:{width:'10px',height:'10px',borderRadius:'99px',background:status==='pending'?'var(--acc)':status==='active'?'var(--grn)':'var(--red)'}})));
+    if(!im){
+      const actions=h('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap'}});
+      if(status==='pending')actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:'var(--grn)',color:'#fff',fontWeight:'700',fontSize:'11px',cursor:'pointer'},onclick:async()=>{try{await api('POST','/admin/approve',{user_id:u.id});VIEW='admin';render();}catch(e){alert(e.message);}}},'✓ '+t('approve')));
+      if(status==='active')actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:'rgba(239,68,68,.12)',border:'1px solid rgba(239,68,68,.2)',color:'var(--red)',fontWeight:'700',fontSize:'11px',cursor:'pointer'},onclick:async()=>{if(confirm(t('deactivate')+' '+u.username+'?')){try{await api('POST','/admin/deactivate',{user_id:u.id});VIEW='admin';render();}catch(e){alert(e.message);}}}},' '+t('deactivate')));
+      if(status==='inactive')actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:'rgba(16,185,129,.12)',border:'1px solid rgba(16,185,129,.2)',color:'var(--grn)',fontWeight:'700',fontSize:'11px',cursor:'pointer'},onclick:async()=>{try{await api('POST','/admin/activate',{user_id:u.id});VIEW='admin';render();}catch(e){alert(e.message);}}},' '+t('activate')));
+      if(isAdm)actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontWeight:'600',fontSize:'11px',cursor:'pointer'},onclick:async()=>{const np=prompt(t('resetPw')+' (6+):');if(np&&np.length>=6){try{await api('POST','/admin/reset-password',{user_id:u.id,new_password:np});alert('✓');}catch(e){alert(e.message);}}}},' '+t('resetPw')));
+      // Role selector
+      if(isAdm&&u.role!=='master_admin'){
+        const roles=isMaster?['user','moderator','admin']:['user','moderator'];
+        const sel=h('select',{style:{padding:'6px 10px',borderRadius:'8px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontSize:'11px',fontWeight:'700'},
+          onchange:async function(e){try{await api('POST','/admin/set-role',{user_id:u.id,role:e.target.value});VIEW='admin';render();}catch(err){alert(err.message);}}},
+          ...roles.map(r=>h('option',{value:r,selected:u.role===r,style:{background:'var(--card2)'}},t(r==='admin'?'admin':r==='moderator'?'moderator':'user'))));
+        actions.appendChild(sel);
+      }
+      // Delete user (admin only)
+      if(isAdm)actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:'var(--red)',color:'#fff',fontWeight:'700',fontSize:'11px',cursor:'pointer'},onclick:async()=>{if(confirm('Permanently delete '+u.username+' and all their data?')){try{await api('POST','/admin/delete-user',{user_id:u.id});VIEW='admin';render();}catch(e){alert(e.message);}}}},'🗑'));
+      card.appendChild(actions);
+    }
+    return card;
   }
-  main.appendChild(h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'10px',marginTop:'16px',color:T.grn,display:'flex',alignItems:'center',gap:'8px'}},
-    h('span',{style:{width:'8px',height:'8px',borderRadius:'99px',background:T.grn,display:'inline-block'}}),t('active')+' ('+active.length+')'));
-  active.forEach(u=>main.appendChild(userCard(u,'active')));
-  if(inactive.length){
-    main.appendChild(h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'10px',marginTop:'16px',color:T.red,display:'flex',alignItems:'center',gap:'8px'}},
-      h('span',{style:{width:'8px',height:'8px',borderRadius:'99px',background:T.red,display:'inline-block'}}),t('inactive')+' ('+inactive.length+')'));
-    inactive.forEach(u=>main.appendChild(userCard(u,'inactive')));
-  }
-
-  page.appendChild(main);
-  app.appendChild(page);
+  if(pending.length){main.appendChild(h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'10px',color:'var(--acc)'}},t('pending')+' ('+pending.length+')'));pending.forEach(u=>main.appendChild(uCard(u,'pending')));}
+  main.appendChild(h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'10px',marginTop:'16px',color:'var(--grn)'}},t('active')+' ('+active.length+')'));active.forEach(u=>main.appendChild(uCard(u,'active')));
+  if(inactive.length){main.appendChild(h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'10px',marginTop:'16px',color:'var(--red)'}},t('inactive')+' ('+inactive.length+')'));inactive.forEach(u=>main.appendChild(uCard(u,'inactive')));}
+  page.appendChild(main);app.appendChild(page);
 }
 
-function userCard(u, status){
-  const isAdmin=u.is_admin;
-  const card=h('div',{style:{background:T.card,borderRadius:'14px',padding:'14px',border:'1px solid '+T.bdr,marginBottom:'10px'}},
-    h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}},
-      h('div',{},
-        h('div',{style:{fontSize:'14px',fontWeight:'700',display:'flex',alignItems:'center',gap:'6px'}},
-          u.display_name||u.username,
-          isAdmin?h('span',{style:{fontSize:'9px',padding:'2px 8px',borderRadius:'99px',background:T.acc2+'22',color:T.acc2,fontWeight:'700'}},'ADMIN'):null),
-        h('div',{style:{fontSize:'11px',color:T.mut,marginTop:'2px'}},'@'+u.username+' · '+u.created_at?.split('T')[0]+(u.last_login?' · Last: '+u.last_login.split('T')[0]:''))),
-      h('div',{style:{width:'10px',height:'10px',borderRadius:'99px',background:status==='pending'?T.acc:status==='active'?T.grn:T.red}})));
-
-  if(!isAdmin){
-    const actions=h('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap'}});
-    if(status==='pending') actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:T.grn,color:'#fff',fontWeight:'700',fontSize:'11px',cursor:'pointer'},onclick:async()=>{try{await api('POST','/admin/approve',{user_id:u.id});VIEW='admin';render();}catch(e){alert(e.message);}}},'✓ '+t('approve')));
-    if(status==='active') actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:T.red+'22',border:'1px solid '+T.red+'44',color:T.red,fontWeight:'700',fontSize:'11px',cursor:'pointer'},onclick:async()=>{if(confirm(t('deactivate')+' '+u.username+'?')){try{await api('POST','/admin/deactivate',{user_id:u.id});VIEW='admin';render();}catch(e){alert(e.message);}}}},' '+t('deactivate')));
-    if(status==='inactive') actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:T.grn+'22',border:'1px solid '+T.grn+'44',color:T.grn,fontWeight:'700',fontSize:'11px',cursor:'pointer'},onclick:async()=>{try{await api('POST','/admin/activate',{user_id:u.id});VIEW='admin';render();}catch(e){alert(e.message);}}},' '+t('activate')));
-    actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:T.card2,border:'1px solid '+T.bdr,color:T.txt,fontWeight:'600',fontSize:'11px',cursor:'pointer'},onclick:async()=>{const np=prompt(t('resetPw')+' (6+):');if(np&&np.length>=6){try{await api('POST','/admin/reset-password',{user_id:u.id,new_password:np});alert('✓');}catch(e){alert(e.message);}}}},' '+t('resetPw')));
-    card.appendChild(actions);
-  }
-  return card;
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  BOOT
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════ BOOT ═══════════════════════════
 loadSession();
-if(TOKEN && USER){
-  api('GET','/me').then(res=>{
-    USER=Object.assign(USER,res);
-    VIEW=USER.is_admin?'admin':'app';
-    render();
+if(TOKEN&&USER){
+  api('GET','/me').then(res=>{USER=Object.assign(USER,res);saveSession();resetInactivity();
+    VIEW=USER.role&&USER.role!=='user'?'admin':'app';render();
+    if(!USER.terms_accepted)showTerms();
+    else if(!USER.onboarding_done)showOnboarding();
   }).catch(()=>{clearSession();VIEW='login';render();});
-} else {VIEW='login';render();}
+}else{VIEW='login';render();}
 </script>
 </body>
 </html>
