@@ -6,46 +6,51 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="financiQ">
-<meta name="theme-color" content="#080C16">
+<meta name="theme-color" content="#0A0F1A">
 <title>financiQ</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#080C16;--card:#0F1628;--card2:#161E34;--bdr:#1C2747;--txt:#E2E8F0;--mut:#5A6A8A;--acc:#F59E0B;--acc2:#3B82F6;--red:#EF4444;--grn:#10B981;--glass:rgba(15,22,40,.95);--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)}
-.light{--bg:#F8FAFC;--card:#FFFFFF;--card2:#F1F5F9;--bdr:#E2E8F0;--txt:#1E293B;--mut:#64748B;--acc:#F59E0B;--acc2:#3B82F6;--red:#EF4444;--grn:#10B981;--glass:rgba(248,250,252,.95)}
+:root{--bg:#0A0F1A;--card:#111827;--card2:#1A2332;--bdr:#1F2D3D;--txt:#E8ECF1;--mut:#6B7B8D;--acc:#22C55E;--acc2:#16A34A;--red:#F43F5E;--grn:#22C55E;--blue:#3B82F6;--glass:rgba(17,24,39,.92);--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)}
+.light{--bg:#F9FAFB;--card:#FFFFFF;--card2:#F3F4F6;--bdr:#E5E7EB;--txt:#111827;--mut:#6B7280;--acc:#16A34A;--acc2:#15803D;--red:#E11D48;--grn:#16A34A;--blue:#2563EB;--glass:rgba(249,250,251,.92)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{font-family:'Alef',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overscroll-behavior:none;transition:background .3s,color .3s}
 input,button,textarea,select{font-family:'Alef',sans-serif;-webkit-appearance:none;border:none;outline:none}
-::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px}
-@keyframes fu{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px}
+@keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
-.fu{animation:fu .35s ease forwards}
-.spinner{width:20px;height:20px;border:2px solid rgba(128,128,128,.3);border-top-color:var(--acc);border-radius:50%;animation:spin .6s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
-@media(min-width:768px){.desktop-sidebar{display:flex!important}.mobile-nav{display:none!important}.main-with-sidebar{margin-left:260px!important}}
+.fu{animation:fu .3s ease forwards}
+.spinner{width:18px;height:18px;border:2px solid rgba(128,128,128,.3);border-top-color:var(--acc);border-radius:50%;animation:spin .6s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px}
+@media(min-width:768px){.desktop-sidebar{display:flex!important}.mobile-nav{display:none!important}.main-with-sidebar{margin-left:240px!important}}
 @media(max-width:767px){.desktop-sidebar{display:none!important}.mobile-nav{display:flex!important}.main-with-sidebar{margin-left:0!important}}
-.tour-overlay,.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center;animation:fadeIn .3s;backdrop-filter:blur(8px)}
-.tour-card,.modal-card{background:var(--card);border-radius:24px;padding:32px;max-width:440px;width:90%;border:1px solid var(--bdr);animation:slideUp .4s;position:relative;overflow:hidden}
-.tour-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+.tour-overlay,.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;animation:fadeIn .2s;backdrop-filter:blur(6px)}
+.tour-card,.modal-card{background:var(--card);border-radius:14px;padding:28px;max-width:420px;width:90%;border:1px solid var(--bdr);animation:slideUp .3s;position:relative;overflow:hidden}
+.tour-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--acc)}
 .pw-wrap{position:relative;width:100%}.pw-wrap input{width:100%;padding-right:48px}
-.pw-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--mut);cursor:pointer;font-size:16px;padding:4px;margin-top:-6px}
-.chat-messages{display:flex;flex-direction:column;gap:12px;margin-bottom:16px;max-height:55vh;overflow-y:auto;padding:4px}
-.chat-msg{max-width:85%;padding:12px 16px;border-radius:16px;font-size:13px;line-height:1.6;word-wrap:break-word;white-space:pre-wrap}
-.chat-msg.user{align-self:flex-end;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border-bottom-right-radius:4px}
+.pw-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--mut);cursor:pointer;font-size:15px;padding:4px;margin-top:-6px}
+.chat-messages{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;max-height:55vh;overflow-y:auto;padding:4px}
+.chat-msg{max-width:82%;padding:11px 15px;border-radius:14px;font-size:13px;line-height:1.6;word-wrap:break-word;white-space:pre-wrap}
+.chat-msg.user{align-self:flex-end;background:var(--acc);color:#fff;border-bottom-right-radius:4px}
+[dir=rtl] .chat-msg.user{border-bottom-right-radius:14px;border-bottom-left-radius:4px}
 .chat-msg.assistant{align-self:flex-start;background:var(--card2);color:var(--txt);border-bottom-left-radius:4px;border:1px solid var(--bdr)}
+[dir=rtl] .chat-msg.assistant{border-bottom-left-radius:14px;border-bottom-right-radius:4px}
 .chat-input-wrap{display:flex;gap:8px;align-items:flex-end}
-.chat-input-wrap textarea{flex:1;padding:12px 16px;border-radius:14px;background:var(--card2);border:1px solid var(--bdr);color:var(--txt);font-size:14px;resize:none;min-height:48px;max-height:120px;font-family:'Alef',sans-serif}
-.drop-zone{border:2px dashed var(--bdr);border-radius:16px;padding:40px 20px;text-align:center;cursor:pointer;transition:all .2s}
-.drop-zone:hover,.drop-zone.drag-over{border-color:var(--acc);background:rgba(245,158,11,.05)}
-.preview-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:12px}
-.preview-table th{background:var(--card2);padding:8px 10px;text-align:left;font-weight:700;color:var(--acc);border-bottom:1px solid var(--bdr);position:sticky;top:0}
-.preview-table td{padding:6px 10px;border-bottom:1px solid rgba(28,39,71,.2);color:var(--txt)}
-.alert-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;font-size:10px;font-weight:700}
-.tab-pills{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:16px}
-.tab-pills button{padding:8px 16px;border-radius:99px;border:1px solid var(--bdr);background:var(--card);color:var(--mut);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.chat-input-wrap textarea{flex:1;padding:11px 14px;border-radius:12px;background:var(--card2);border:1px solid var(--bdr);color:var(--txt);font-size:13px;resize:none;min-height:44px;max-height:120px;font-family:'Alef',sans-serif}
+.drop-zone{border:2px dashed var(--bdr);border-radius:14px;padding:36px 20px;text-align:center;cursor:pointer;transition:all .2s}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--acc);background:rgba(34,197,94,.04)}
+.preview-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px}
+.preview-table th{background:var(--card2);padding:7px 10px;text-align:left;font-weight:700;color:var(--acc);border-bottom:1px solid var(--bdr);position:sticky;top:0}
+.preview-table td{padding:5px 10px;border-bottom:1px solid rgba(31,45,61,.2);color:var(--txt)}
+.alert-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:6px;font-size:10px;font-weight:700}
+.tab-pills{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:14px}
+.tab-pills button{padding:7px 14px;border-radius:8px;border:1px solid var(--bdr);background:var(--card);color:var(--mut);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
 .tab-pills button.active{background:var(--acc);color:#fff;border-color:var(--acc)}
+.chat-send-btn{width:44px;height:44px;border-radius:12px;background:var(--acc);color:#fff;font-weight:700;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.chat-send-btn:hover{background:var(--acc2)}
+[dir=rtl] .chat-send-btn{transform:scaleX(-1)}
 </style>
 </head>
 <body>
@@ -208,7 +213,7 @@ function resetInactivity(){
         h('div',{style:{display:'flex',gap:'10px',marginTop:'20px'}},
           h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontWeight:'700',cursor:'pointer'},
             onclick:()=>{clearSession();VIEW='login';render();overlay.remove();}},t('signOut')),
-          h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},
+          h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'var(--acc)',color:'#fff',fontWeight:'700',cursor:'pointer'},
             onclick:()=>{api('POST','/heartbeat').catch(()=>{});overlay.remove();resetInactivity();}},t('stayLoggedIn'))
         )));
     document.body.appendChild(overlay);
@@ -234,10 +239,10 @@ function render(){
 
 // ─── Shared UI ──────────────────────────────────────────
 function authPage(app,content){
-  app.appendChild(h('div',{style:{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:'20px',background:'linear-gradient(135deg,var(--bg) 0%,var(--card) 50%,var(--bg) 100%)'}},
+  app.appendChild(h('div',{style:{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:'20px',background:'var(--bg)'}},
     h('div',{style:{width:'100%',maxWidth:'400px'},className:'fu'},
       h('div',{style:{textAlign:'center',marginBottom:'32px'}},
-        h('div',{style:{width:'56px',height:'56px',borderRadius:'16px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:'26px',fontWeight:'700',color:'#fff',marginBottom:'12px'}},'₪'),
+        h('div',{style:{width:'56px',height:'56px',borderRadius:'16px',background:'var(--acc)',display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:'26px',fontWeight:'700',color:'#fff',marginBottom:'12px'}},'₪'),
         h('div',{style:{fontSize:'24px',fontWeight:'700',letterSpacing:'-0.5px'}},'financiQ'),
         h('div',{style:{fontSize:'13px',color:'var(--mut)',marginTop:'4px'}},t('tagline'))),content)));
 }
@@ -249,7 +254,7 @@ function passwordField(ph,val,oninput,onkeydown){
   const b=h('button',{className:'pw-toggle',onclick:()=>{const s=i.type==='password';i.type=s?'text':'password';b.textContent=s?'🙈':'👁';}},'👁');
   w.appendChild(i);w.appendChild(b);return w;
 }
-function btnPrimary(txt,onclick,loading){return h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',fontSize:'15px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',opacity:loading?'.7':'1'},onclick:loading?null:onclick},loading?h('span',{className:'spinner'}):null,txt);}
+function btnPrimary(txt,onclick,loading){return h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:'var(--acc)',color:'#fff',fontWeight:'700',fontSize:'15px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',opacity:loading?'.7':'1'},onclick:loading?null:onclick},loading?h('span',{className:'spinner'}):null,txt);}
 function errBox(m){if(!m)return null;return h('div',{style:{padding:'12px 16px',borderRadius:'10px',background:'var(--red)',color:'#fff',fontSize:'13px',marginBottom:'16px',fontWeight:'600',textAlign:'center',opacity:'.9'}},m);}
 function successBox(m){if(!m)return null;return h('div',{style:{padding:'12px 16px',borderRadius:'10px',background:'var(--grn)',color:'#fff',fontSize:'13px',marginBottom:'16px',fontWeight:'600',textAlign:'center',opacity:'.9'}},m);}
 function statCard(label,value,color){return h('div',{style:{background:'var(--card)',borderRadius:'14px',padding:'16px',border:'1px solid var(--bdr)',textAlign:'center',flex:'1',minWidth:'0'}},h('div',{style:{fontSize:'22px',fontWeight:'700',color:color||'var(--txt)'}},value),h('div',{style:{fontSize:'11px',color:'var(--mut)',marginTop:'4px'}},label));}
@@ -257,7 +262,7 @@ function statCard(label,value,color){return h('div',{style:{background:'var(--ca
 // ═══════════════════════════ LOGIN ═══════════════════════════
 function renderLogin(app){
   let un='',pw='';
-  const card=h('div',{style:{background:'var(--card)',borderRadius:'20px',padding:'28px',border:'1px solid var(--bdr)'}},
+  const card=h('div',{style:{background:'var(--card)',borderRadius:'14px',padding:'28px',border:'1px solid var(--bdr)'}},
     h('div',{style:{fontSize:'18px',fontWeight:'700',marginBottom:'4px'}},t('signIn')),
     h('div',{style:{fontSize:'12px',color:'var(--mut)',marginBottom:'20px'}},t('signInSub')),
     errBox(ERR),
@@ -288,11 +293,11 @@ function renderRegister(app){
   let un='',pw='',pw2='',dn='',lang='en',success=false;
   function doRender(){
     const content=success
-      ?h('div',{style:{background:'var(--card)',borderRadius:'20px',padding:'28px',border:'1px solid var(--bdr)'}},
+      ?h('div',{style:{background:'var(--card)',borderRadius:'14px',padding:'28px',border:'1px solid var(--bdr)'}},
         successBox(t('accountCreated')),
-        h('div',{style:{background:'rgba(245,158,11,.15)',borderRadius:'10px',padding:'14px',marginBottom:'16px',fontSize:'12px',color:'var(--acc)',lineHeight:'1.5'}},'⏳ '+t('pendingApproval')),
+        h('div',{style:{background:'rgba(34,197,94,.15)',borderRadius:'10px',padding:'14px',marginBottom:'16px',fontSize:'12px',color:'var(--acc)',lineHeight:'1.5'}},'⏳ '+t('pendingApproval')),
         h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontWeight:'700',cursor:'pointer'},onclick:()=>{ERR='';VIEW='login';render();}},'← '+t('signInLink')))
-      :h('div',{style:{background:'var(--card)',borderRadius:'20px',padding:'28px',border:'1px solid var(--bdr)'}},
+      :h('div',{style:{background:'var(--card)',borderRadius:'14px',padding:'28px',border:'1px solid var(--bdr)'}},
         h('div',{style:{fontSize:'18px',fontWeight:'700',marginBottom:'4px'}},t('createAccount')),
         h('div',{style:{fontSize:'12px',color:'var(--mut)',marginBottom:'20px'}},t('signUpFor')),
         errBox(ERR),
@@ -301,8 +306,8 @@ function renderRegister(app){
         passwordField(t('passwordPlc'),pw,function(e){pw=e.target.value;}),
         passwordField(t('confirmPw'),pw2,function(e){pw2=e.target.value;}),
         h('div',{style:{display:'flex',gap:'8px',marginBottom:'16px'}},
-          h('button',{style:{flex:1,padding:'10px',borderRadius:'10px',background:lang==='en'?'rgba(59,130,246,.2)':'var(--card2)',border:'1px solid '+(lang==='en'?'var(--acc2)':'var(--bdr)'),color:lang==='en'?'var(--acc2)':'var(--mut)',fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{lang='en';doRender();}},'English'),
-          h('button',{style:{flex:1,padding:'10px',borderRadius:'10px',background:lang==='he'?'rgba(59,130,246,.2)':'var(--card2)',border:'1px solid '+(lang==='he'?'var(--acc2)':'var(--bdr)'),color:lang==='he'?'var(--acc2)':'var(--mut)',fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{lang='he';doRender();}},'עברית')),
+          h('button',{style:{flex:1,padding:'10px',borderRadius:'10px',background:lang==='en'?'rgba(22,163,74,.2)':'var(--card2)',border:'1px solid '+(lang==='en'?'var(--acc2)':'var(--bdr)'),color:lang==='en'?'var(--acc2)':'var(--mut)',fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{lang='en';doRender();}},'English'),
+          h('button',{style:{flex:1,padding:'10px',borderRadius:'10px',background:lang==='he'?'rgba(22,163,74,.2)':'var(--card2)',border:'1px solid '+(lang==='he'?'var(--acc2)':'var(--bdr)'),color:lang==='he'?'var(--acc2)':'var(--mut)',fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{lang='he';doRender();}},'עברית')),
         btnPrimary(t('createAccount'),doRegister,LOADING),
         h('div',{style:{textAlign:'center',marginTop:'16px',fontSize:'13px',color:'var(--mut)'}},t('haveAccount')+' ',
           h('button',{style:{background:'none',border:'none',color:'var(--acc)',fontWeight:'700',fontSize:'13px',cursor:'pointer'},onclick:()=>{ERR='';VIEW='login';render();}},t('signInLink'))));
@@ -324,7 +329,7 @@ function showTerms(){
     h('div',{className:'modal-card',style:{direction:isRTL()?'rtl':'ltr',maxHeight:'80vh',overflowY:'auto'}},
       h('div',{style:{fontSize:'20px',fontWeight:'700',marginBottom:'12px'}},t('termsTitle')),
       h('div',{style:{fontSize:'13px',color:'var(--mut)',lineHeight:'1.8',marginBottom:'24px',whiteSpace:'pre-wrap'}},t('termsText')),
-      h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},
+      h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:'var(--acc)',color:'#fff',fontWeight:'700',cursor:'pointer'},
         onclick:async()=>{try{await api('POST','/accept-terms');USER.terms_accepted=1;saveSession();overlay.remove();if(!USER.onboarding_done)showOnboarding();else if(!USER.tour_completed)showTour();}catch(e){alert(e.message);}}},t('acceptTerms'))));
   document.body.appendChild(overlay);
 }
@@ -345,9 +350,9 @@ function showOnboarding(isUpdate){
         inputField('₪','number',monthlyGoal,function(e){monthlyGoal=e.target.value;}),
         h('div',{style:{fontSize:'13px',fontWeight:'700',marginBottom:'10px',marginTop:'4px'}},t('onboardNeedQ')),
         h('div',{style:{display:'flex',flexWrap:'wrap',gap:'8px',marginBottom:'24px'}},
-          ...goalOptions.map(g=>h('button',{style:{padding:'8px 16px',borderRadius:'99px',background:selectedGoals.includes(g)?'rgba(245,158,11,.2)':'var(--card2)',border:'1px solid '+(selectedGoals.includes(g)?'var(--acc)':'var(--bdr)'),color:selectedGoals.includes(g)?'var(--acc)':'var(--mut)',fontWeight:'700',fontSize:'12px',cursor:'pointer'},
+          ...goalOptions.map(g=>h('button',{style:{padding:'8px 16px',borderRadius:'8px',background:selectedGoals.includes(g)?'rgba(34,197,94,.2)':'var(--card2)',border:'1px solid '+(selectedGoals.includes(g)?'var(--acc)':'var(--bdr)'),color:selectedGoals.includes(g)?'var(--acc)':'var(--mut)',fontWeight:'700',fontSize:'12px',cursor:'pointer'},
             onclick:()=>{if(selectedGoals.includes(g))selectedGoals=selectedGoals.filter(x=>x!==g);else selectedGoals.push(g);doRender();}},t(g)))),
-        h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},
+        h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:'var(--acc)',color:'#fff',fontWeight:'700',cursor:'pointer'},
           onclick:async()=>{
             const data={monthly_expense_goal:parseFloat(monthlyGoal)||0,app_goals:selectedGoals};
             try{await api('POST','/onboarding',data);USER.onboarding_done=1;USER.onboarding_data=JSON.stringify(data);saveSession();overlay.remove();if(!isUpdate&&!USER.tour_completed)showTour();}catch(e){alert(e.message);}
@@ -375,7 +380,7 @@ function showTour(){
         h('div',{style:{fontSize:'14px',color:'var(--mut)',textAlign:'center',lineHeight:'1.7',marginBottom:'28px'}},t(s.k+'Text')),
         h('div',{style:{display:'flex',gap:'10px'}},
           !isFirst?h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontWeight:'700',cursor:'pointer'},onclick:()=>{step--;doRender();}},t('back')):null,
-          h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},
+          h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'var(--acc)',color:'#fff',fontWeight:'700',cursor:'pointer'},
             onclick:()=>{if(isLast){overlay.remove();api('POST','/tour-complete').catch(()=>{});if(USER)USER.tour_completed=1;saveSession();}else{step++;doRender();}}},isLast?t('getStarted'):t('next'))),
         !isLast?h('button',{style:{width:'100%',marginTop:'12px',padding:'8px',background:'none',border:'none',color:'var(--mut)',fontSize:'12px',cursor:'pointer'},onclick:()=>{overlay.remove();api('POST','/tour-complete').catch(()=>{});if(USER)USER.tour_completed=1;saveSession();}},t('skip')):null));
     document.body.appendChild(overlay);
@@ -393,13 +398,13 @@ function renderApp(app){
     {id:'budgets',icon:'📋',l:t('budgets')},{id:'upload',icon:'⬆',l:t('upload')},{id:'ai',icon:'✦',l:t('aiAgent')},
     {id:'cards',icon:'💳',l:t('cards')},{id:'goals',icon:'🎯',l:t('goals')},{id:'settings',icon:'⚙',l:t('settings')}];
   // Desktop Sidebar
-  const sb=h('div',{className:'desktop-sidebar',style:{position:'fixed',top:0,[isRTL()?'right':'left']:0,bottom:0,width:'260px',background:'var(--card)',[isRTL()?'borderLeft':'borderRight']:'1px solid var(--bdr)',padding:'24px 16px',display:'flex',flexDirection:'column',zIndex:100}});
+  const sb=h('div',{className:'desktop-sidebar',style:{position:'fixed',top:0,[isRTL()?'right':'left']:0,bottom:0,width:'240px',background:'var(--card)',[isRTL()?'borderLeft':'borderRight']:'1px solid var(--bdr)',padding:'24px 16px',display:'flex',flexDirection:'column',zIndex:100}});
   sb.appendChild(h('div',{style:{display:'flex',alignItems:'center',gap:'12px',marginBottom:'32px',padding:'0 8px'}},
-    h('div',{style:{width:'40px',height:'40px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'20px',fontWeight:'700',color:'#fff'}},'₪'),
+    h('div',{style:{width:'40px',height:'40px',borderRadius:'12px',background:'var(--acc)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'20px',fontWeight:'700',color:'#fff'}},'₪'),
     h('div',{},h('div',{style:{fontSize:'18px',fontWeight:'700'}},'financiQ'),h('div',{style:{fontSize:'10px',color:'var(--mut)'}},t('tagline')))));
   navItems.forEach(n=>{
     const active=APP_TAB===n.id;
-    sb.appendChild(h('button',{style:{width:'100%',padding:'12px 16px',borderRadius:'12px',background:active?'rgba(245,158,11,.1)':'transparent',border:'none',color:active?'var(--acc)':'var(--mut)',fontSize:'14px',fontWeight:active?'700':'400',cursor:'pointer',display:'flex',alignItems:'center',gap:'12px',marginBottom:'4px',textAlign:isRTL()?'right':'left',direction:dir},onclick:()=>{APP_TAB=n.id;render();}},h('span',{style:{fontSize:'18px'}},n.icon),n.l));
+    sb.appendChild(h('button',{style:{width:'100%',padding:'12px 16px',borderRadius:'12px',background:active?'rgba(34,197,94,.1)':'transparent',border:'none',color:active?'var(--acc)':'var(--mut)',fontSize:'14px',fontWeight:active?'700':'400',cursor:'pointer',display:'flex',alignItems:'center',gap:'12px',marginBottom:'4px',textAlign:isRTL()?'right':'left',direction:dir},onclick:()=>{APP_TAB=n.id;render();}},h('span',{style:{fontSize:'18px'}},n.icon),n.l));
   });
   if(USER?.role&&USER.role!=='user'){
     sb.appendChild(h('button',{style:{width:'100%',padding:'12px 16px',borderRadius:'12px',background:'transparent',border:'none',color:'var(--red)',fontSize:'14px',cursor:'pointer',display:'flex',alignItems:'center',gap:'12px',marginBottom:'4px',textAlign:isRTL()?'right':'left'},onclick:()=>{VIEW='admin';render();}},h('span',{style:{fontSize:'18px'}},'🛡'),t('admin')));
@@ -413,11 +418,11 @@ function renderApp(app){
   // Mobile Header
   wrapper.appendChild(h('div',{className:'mobile-nav',style:{position:'sticky',top:0,zIndex:100,background:'var(--glass)',borderBottom:'1px solid var(--bdr)',padding:'calc(var(--st) + 8px) 16px 8px',display:'flex',alignItems:'center',justifyContent:'space-between',backdropFilter:'blur(16px)'}},
     h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},
-      h('div',{style:{width:'32px',height:'32px',borderRadius:'10px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'15px',fontWeight:'700',color:'#fff'}},'₪'),
+      h('div',{style:{width:'32px',height:'32px',borderRadius:'10px',background:'var(--acc)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'15px',fontWeight:'700',color:'#fff'}},'₪'),
       h('div',{style:{fontSize:'16px',fontWeight:'700'}},'financiQ')),
     h('button',{style:{padding:'6px 12px',borderRadius:'8px',background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.2)',color:'var(--red)',fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:()=>{clearSession();VIEW='login';render();}},t('signOut'))));
   // Main content
-  const main=h('div',{className:'main-with-sidebar',style:{marginLeft:'0',padding:IS_MOBILE?'16px':'32px',paddingBottom:IS_MOBILE?'100px':'32px',maxWidth:'960px',margin:IS_MOBILE?'0 auto':'0 auto 0 260px'}});
+  const main=h('div',{className:'main-with-sidebar',style:{marginLeft:'0',padding:IS_MOBILE?'16px':'32px',paddingBottom:IS_MOBILE?'100px':'32px',maxWidth:'960px',margin:IS_MOBILE?'0 auto':'0 auto 0 240px'}});
   main.appendChild(h('div',{style:{marginBottom:'24px'},className:'fu'},
     h('div',{style:{fontSize:IS_MOBILE?'22px':'28px',fontWeight:'700'}},t('welcome')+', '+(USER?.display_name||USER?.username||'')),
     h('div',{style:{fontSize:'13px',color:'var(--mut)',marginTop:'4px'}},new Date().toLocaleDateString(USER?.lang==='he'?'he-IL':'en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}))));
@@ -483,7 +488,7 @@ async function renderDashboard(c){
     }
     // Anomalies
     if(s.anomalies&&s.anomalies.length){
-      const an=h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'18px',border:'1px solid rgba(245,158,11,.3)',marginBottom:'16px'},className:'fu'},
+      const an=h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'18px',border:'1px solid rgba(34,197,94,.3)',marginBottom:'16px'},className:'fu'},
         h('div',{style:{fontSize:'14px',fontWeight:'700',color:'var(--acc)',marginBottom:'12px'}},'🔍 '+t('anomaly')));
       s.anomalies.forEach(a=>{
         an.appendChild(h('div',{style:{padding:'8px 0',borderBottom:'1px solid var(--bdr)',fontSize:'13px'}},
@@ -523,7 +528,7 @@ async function renderDashboard(c){
         const pct=Math.round(cat.total/mx*100);
         cb.appendChild(h('div',{style:{marginBottom:'10px'}},
           h('div',{style:{display:'flex',justifyContent:'space-between',fontSize:'13px',marginBottom:'3px'}},h('span',{},cat.category),h('span',{style:{color:'var(--acc)'}},'₪'+Number(cat.total).toLocaleString())),
-          h('div',{style:{width:'100%',height:'6px',borderRadius:'3px',background:'var(--card2)'}},h('div',{style:{width:pct+'%',height:'100%',borderRadius:'3px',background:'linear-gradient(90deg,var(--acc),var(--acc2))'}}))));
+          h('div',{style:{width:'100%',height:'6px',borderRadius:'3px',background:'var(--card2)'}},h('div',{style:{width:pct+'%',height:'100%',borderRadius:'3px',background:'var(--acc)'}}))));
       });
       c.appendChild(cb);
     }
@@ -560,13 +565,13 @@ async function renderDashboard(c){
     }
     // AI Tips
     if(s.ai_tips&&s.ai_tips.length){
-      c.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'18px',border:'1px solid rgba(245,158,11,.3)',marginBottom:'16px'},className:'fu'},
+      c.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'18px',border:'1px solid rgba(34,197,94,.3)',marginBottom:'16px'},className:'fu'},
         h('div',{style:{fontSize:'14px',fontWeight:'700',marginBottom:'12px',display:'flex',alignItems:'center',gap:'8px'}},'💡 '+t('aiTips')),
         ...s.ai_tips.map(tip=>h('div',{style:{padding:'10px 14px',background:'var(--card2)',borderRadius:'10px',marginBottom:'6px',fontSize:'13px',lineHeight:'1.5'}},tip))));
     } else if(s.total_transactions>3){
       c.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'18px',border:'1px solid var(--bdr)',marginBottom:'16px',textAlign:'center'},className:'fu'},
         h('div',{style:{fontSize:'14px',fontWeight:'700',marginBottom:'10px'}},'💡 '+t('aiTips')),
-        h('button',{style:{padding:'10px 24px',borderRadius:'10px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',fontSize:'13px',cursor:'pointer'},
+        h('button',{style:{padding:'10px 24px',borderRadius:'10px',background:'var(--acc)',color:'#fff',fontWeight:'700',fontSize:'13px',cursor:'pointer'},
           onclick:async function(){this.textContent='...';try{const r=await api('POST','/generate-tips');if(r.tips)APP_TAB='dashboard';render();}catch(e){alert(e.message);this.textContent=t('generateTips');}}},t('generateTips'))));
     }
     // Household
@@ -581,7 +586,7 @@ async function renderDashboard(c){
     if(!s.total_transactions){
       c.appendChild(h('div',{style:{textAlign:'center',padding:'40px',color:'var(--mut)',background:'var(--card)',borderRadius:'16px',border:'1px solid var(--bdr)'},className:'fu'},
         h('div',{style:{fontSize:'40px',marginBottom:'12px'}},'📭'),h('div',{style:{fontSize:'15px',fontWeight:'700'}},t('noData')),
-        h('button',{style:{marginTop:'16px',padding:'10px 24px',borderRadius:'10px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:()=>{APP_TAB='transactions';render();}},t('addTx'))));
+        h('button',{style:{marginTop:'16px',padding:'10px 24px',borderRadius:'10px',background:'var(--acc)',color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:()=>{APP_TAB='transactions';render();}},t('addTx'))));
     }
   }catch(e){ld.remove();c.appendChild(errBox(e.message));}
 }
@@ -597,7 +602,7 @@ async function renderTransactions(c){
     h('input',{type:'text',placeholder:'🔍 '+t('search'),style:{flex:1,minWidth:'150px',padding:'10px 14px',borderRadius:'10px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontSize:'13px'},
       oninput:function(e){searchQ=e.target.value;loadTx();}}),
     ...[['',t('all')],['expense',t('expense')],['income',t('income')],['recurring',t('recurring')]].map(([v,l])=>
-      h('button',{style:{padding:'8px 14px',borderRadius:'99px',background:filterType===v?'var(--acc)':'var(--card)',border:'1px solid '+(filterType===v?'var(--acc)':'var(--bdr)'),color:filterType===v?'#fff':'var(--mut)',fontSize:'11px',fontWeight:'700',cursor:'pointer'},
+      h('button',{style:{padding:'8px 14px',borderRadius:'8px',background:filterType===v?'var(--acc)':'var(--card)',border:'1px solid '+(filterType===v?'var(--acc)':'var(--bdr)'),color:filterType===v?'#fff':'var(--mut)',fontSize:'11px',fontWeight:'700',cursor:'pointer'},
         onclick:()=>{filterType=v;loadTx();}},l))));
   c.appendChild(filterBox);
   // Add form
@@ -609,7 +614,7 @@ async function renderTransactions(c){
     }
     let txD=new Date().toISOString().slice(0,10),txDesc='',txAmt='',txCat='Food',txType='expense',txCard='',txRec=false;
     const cats=['Food','Transport','Shopping','Entertainment','Bills','Health','Education','Salary','Freelance','Gift','Mortgage','Insurance','Subscription','Other'];
-    formBox.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid rgba(245,158,11,.3)'}},
+    formBox.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid rgba(34,197,94,.3)'}},
       h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'14px'}},t('addTx')),
       // Receipt scanner
       receiptScannerBtn(function(tx){
@@ -632,7 +637,7 @@ async function renderTransactions(c){
         h('input',{type:'checkbox',style:{width:'18px',height:'18px'},onchange:function(e){txRec=e.target.checked;}}),t('recurring')),
       h('div',{style:{display:'flex',gap:'8px'}},
         h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontWeight:'700',cursor:'pointer'},onclick:()=>{showForm=false;renderForm();}},t('cancel')),
-        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:async()=>{
+        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'var(--acc)',color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:async()=>{
           if(!txDesc||!txAmt)return alert(t('fillFields'));
           try{await api('POST','/transactions',{transactions:[{date:txD,description:txDesc,amount:parseFloat(txAmt),category:txCat,type:txType,card_name:txCard,is_recurring:txRec}]});showForm=false;renderForm();loadTx();}catch(e){alert(e.message);}
         }},t('save')))));
@@ -655,7 +660,7 @@ async function renderTransactions(c){
             h('div',{style:{minWidth:0}},
               h('div',{style:{fontSize:'13px',fontWeight:'700',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',display:'flex',alignItems:'center',gap:'6px'}},
                 tx.description,
-                tx.is_recurring?h('span',{style:{fontSize:'9px',padding:'1px 6px',borderRadius:'99px',background:'rgba(59,130,246,.15)',color:'var(--acc2)'}},'🔄'):null),
+                tx.is_recurring?h('span',{style:{fontSize:'9px',padding:'1px 6px',borderRadius:'8px',background:'rgba(22,163,74,.15)',color:'var(--acc2)'}},'🔄'):null),
               h('div',{style:{fontSize:'11px',color:'var(--mut)'}},tx.category+' · '+tx.date+(tx.card_name?' · '+tx.card_name:'')))),
           h('div',{style:{display:'flex',alignItems:'center',gap:'8px'}},
             h('div',{style:{fontSize:'13px',fontWeight:'700',color:isInc?'var(--grn)':'var(--red)',whiteSpace:'nowrap'}},(isInc?'+':'-')+'₪'+Number(tx.amount).toLocaleString()),
@@ -693,7 +698,7 @@ async function renderBudgets(c){
         const spent=catMap[cat]||0;
         const pct=limit>0?Math.round(spent/limit*100):0;
         const over=pct>100;const warn=pct>=80;
-        lb.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'18px',border:'1px solid '+(over?'rgba(239,68,68,.3)':warn?'rgba(245,158,11,.3)':'var(--bdr)'),marginBottom:'12px'}},
+        lb.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'18px',border:'1px solid '+(over?'rgba(239,68,68,.3)':warn?'rgba(34,197,94,.3)':'var(--bdr)'),marginBottom:'12px'}},
           h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'10px'}},
             h('div',{},
               h('div',{style:{fontSize:'14px',fontWeight:'700'}},cat),
@@ -716,7 +721,7 @@ async function renderBudgets(c){
       return;
     }
     let selCat=cats[0],amt='';
-    fb.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid rgba(245,158,11,.3)'}},
+    fb.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid rgba(34,197,94,.3)'}},
       h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'14px'}},t('addBudget')),
       h('select',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontSize:'14px',marginBottom:'12px'},
         onchange:function(e){selCat=e.target.value;}},
@@ -725,7 +730,7 @@ async function renderBudgets(c){
       h('div',{style:{display:'flex',gap:'8px'}},
         h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontWeight:'700',cursor:'pointer'},
           onclick:()=>{showForm=false;renderForm();}},t('cancel')),
-        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},
+        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'var(--acc)',color:'#fff',fontWeight:'700',cursor:'pointer'},
           onclick:async()=>{
             if(!amt)return alert(t('fillFields'));
             try{await api('POST','/budgets',{budgets:{[selCat]:parseFloat(amt)}});showForm=false;renderForm();loadBudgets();}catch(e){alert(e.message);}
@@ -778,7 +783,7 @@ function renderUpload(c){
       const dz=h('div',{className:'drop-zone'},h('div',{style:{fontSize:'48px',marginBottom:'12px'}},'📁'),
         h('div',{style:{fontSize:'16px',fontWeight:'700',marginBottom:'6px'}},t('uploadCsv')),
         h('div',{style:{fontSize:'13px',color:'var(--mut)',marginBottom:'16px'}},t('uploadDesc')),
-        h('button',{style:{padding:'12px 28px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:()=>fi.click()},t('selectFile')));
+        h('button',{style:{padding:'12px 28px',borderRadius:'12px',background:'var(--acc)',color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:()=>fi.click()},t('selectFile')));
       dz.ondragover=e=>{e.preventDefault();dz.classList.add('drag-over');};
       dz.ondragleave=()=>dz.classList.remove('drag-over');
       dz.ondrop=e=>{e.preventDefault();dz.classList.remove('drag-over');if(e.dataTransfer.files.length)hf(e.dataTransfer.files[0]);};
@@ -822,9 +827,9 @@ function renderUpload(c){
     const hasD=Object.values(mapping).includes('date'),hasA=Object.values(mapping).includes('amount');
     if(importStatus==='done'){
       w.appendChild(successBox(t('imported')+' '+importCount+' '+t('rows')));
-      w.appendChild(h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:()=>{APP_TAB='transactions';render();}},t('transactions')+' →'));
+      w.appendChild(h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:'var(--acc)',color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:()=>{APP_TAB='transactions';render();}},t('transactions')+' →'));
     }else{
-      w.appendChild(h('button',{style:{width:'100%',padding:'14px',borderRadius:'14px',background:hasD&&hasA?'linear-gradient(135deg,var(--acc),var(--acc2))':'var(--card2)',color:hasD&&hasA?'#fff':'var(--mut)',fontWeight:'700',cursor:'pointer',opacity:importStatus==='importing'?'.7':'1'},
+      w.appendChild(h('button',{style:{width:'100%',padding:'14px',borderRadius:'14px',background:hasD&&hasA?'var(--acc)':'var(--card2)',color:hasD&&hasA?'#fff':'var(--mut)',fontWeight:'700',cursor:'pointer',opacity:importStatus==='importing'?'.7':'1'},
         onclick:hasD&&hasA&&importStatus!=='importing'?doImport:null},importStatus==='importing'?t('importing'):t('importBtn')+' '+parsed.length+' '+t('rows')));
     }
   }
@@ -858,7 +863,7 @@ function renderAI(c){
   const w=h('div',{style:{display:'flex',flexDirection:'column',height:IS_MOBILE?'calc(100vh - 180px)':'calc(100vh - 160px)'},className:'fu'});c.appendChild(w);
   w.appendChild(h('div',{style:{marginBottom:'12px'}},
     h('div',{style:{fontSize:'16px',fontWeight:'700',display:'flex',alignItems:'center',gap:'8px'}},
-      h('span',{style:{width:'28px',height:'28px',borderRadius:'8px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:'14px',color:'#fff'}},'✦'),t('aiAgent')),
+      h('span',{style:{width:'28px',height:'28px',borderRadius:'8px',background:'var(--acc)',display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:'14px',color:'#fff'}},'✦'),t('aiAgent')),
     h('div',{style:{fontSize:'12px',color:'var(--mut)',marginTop:'2px'}},t('aiDesc'))));
   const md=h('div',{className:'chat-messages'});
   if(!AI_HISTORY.length)md.appendChild(h('div',{className:'chat-msg assistant'},t('aiWelcome')));
@@ -870,7 +875,7 @@ function renderAI(c){
     oninput:function(e){iv=e.target.value;this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';},
     onkeydown:function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend();}}});
   iw.appendChild(ta);
-  iw.appendChild(h('button',{style:{width:'48px',height:'48px',borderRadius:'14px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',fontSize:'18px',cursor:'pointer',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center'},onclick:doSend},'→'));
+  iw.appendChild(h('button',{className:'chat-send-btn',onclick:doSend},'→'));
   w.appendChild(iw);
   async function doSend(){
     const msg=iv.trim()||ta.value.trim();if(!msg||sending)return;sending=true;
@@ -894,14 +899,14 @@ async function renderCards(c){
     if(!showForm){fb.appendChild(h('button',{style:{width:'100%',padding:'14px',borderRadius:'14px',background:'var(--card)',border:'2px dashed var(--bdr)',color:'var(--acc)',fontWeight:'700',cursor:'pointer'},onclick:()=>{showForm=true;rf();}},'+  '+t('addCard')));return;}
     let cn='',lf='',cc='#3B82F6',ct='credit';
     const colors=['#3B82F6','#EF4444','#10B981','#F59E0B','#8B5CF6','#EC4899','#06B6D4'];
-    fb.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid rgba(245,158,11,.3)'}},
+    fb.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid rgba(34,197,94,.3)'}},
       h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'14px'}},t('addCard')),
       inputField(t('cardName'),'text',cn,function(e){cn=e.target.value;}),
       inputField(t('lastFour'),'text',lf,function(e){lf=e.target.value.replace(/\D/g,'').slice(0,4);}),
       h('div',{style:{display:'flex',gap:'6px',marginBottom:'16px'}},...colors.map(cl=>h('button',{style:{width:'32px',height:'32px',borderRadius:'50%',background:cl,border:cc===cl?'3px solid var(--txt)':'3px solid transparent',cursor:'pointer'},onclick:()=>{cc=cl;rf();}}))),
       h('div',{style:{display:'flex',gap:'8px'}},
         h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontWeight:'700',cursor:'pointer'},onclick:()=>{showForm=false;rf();}},t('cancel')),
-        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:async()=>{
+        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'var(--acc)',color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:async()=>{
           if(!cn)return alert(t('fillFields'));try{await api('POST','/cards',{name:cn,last_four:lf,color:cc,card_type:ct});showForm=false;APP_TAB='cards';render();}catch(e){alert(e.message);}
         }},t('save')))));
   }
@@ -931,15 +936,15 @@ async function renderGoals(c){
     let gn='',gt='',gi='🎯',gc='#10B981';
     const icons=['🎯','🏖','🚗','🏠','💻','🎓','💰','❤','✈','📱'];
     const colors=['#10B981','#3B82F6','#F59E0B','#EF4444','#8B5CF6','#EC4899','#06B6D4'];
-    fb.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid rgba(245,158,11,.3)'}},
+    fb.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid rgba(34,197,94,.3)'}},
       h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'14px'}},t('addGoal')),
-      h('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap',marginBottom:'12px'}},...icons.map(ic=>h('button',{style:{width:'40px',height:'40px',borderRadius:'10px',background:gi===ic?'rgba(245,158,11,.15)':'var(--card2)',border:'1px solid '+(gi===ic?'var(--acc)':'var(--bdr)'),fontSize:'20px',cursor:'pointer'},onclick:()=>{gi=ic;rf();}},ic))),
+      h('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap',marginBottom:'12px'}},...icons.map(ic=>h('button',{style:{width:'40px',height:'40px',borderRadius:'10px',background:gi===ic?'rgba(34,197,94,.15)':'var(--card2)',border:'1px solid '+(gi===ic?'var(--acc)':'var(--bdr)'),fontSize:'20px',cursor:'pointer'},onclick:()=>{gi=ic;rf();}},ic))),
       inputField(t('goalName'),'text',gn,function(e){gn=e.target.value;}),
       inputField(t('target'),'number',gt,function(e){gt=e.target.value;}),
       h('div',{style:{display:'flex',gap:'6px',marginBottom:'16px'}},...colors.map(cl=>h('button',{style:{width:'32px',height:'32px',borderRadius:'50%',background:cl,border:gc===cl?'3px solid var(--txt)':'3px solid transparent',cursor:'pointer'},onclick:()=>{gc=cl;rf();}}))),
       h('div',{style:{display:'flex',gap:'8px'}},
         h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--txt)',fontWeight:'700',cursor:'pointer'},onclick:()=>{showForm=false;rf();}},t('cancel')),
-        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:async()=>{
+        h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'var(--acc)',color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:async()=>{
           if(!gn||!gt)return alert(t('fillFields'));try{await api('POST','/goals',{name:gn,target:parseFloat(gt),icon:gi,color:gc});showForm=false;APP_TAB='goals';render();}catch(e){alert(e.message);}
         }},t('save')))));
   }
@@ -972,14 +977,14 @@ function renderSettings(c){
   c.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid var(--bdr)',marginBottom:'14px'},className:'fu'},
     h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'14px'}},t('language')),
     h('div',{style:{display:'flex',gap:'8px'}},
-      h('button',{style:{flex:1,padding:'14px',borderRadius:'12px',background:(USER?.lang||'en')==='en'?'rgba(59,130,246,.15)':'var(--card2)',border:'1px solid '+((USER?.lang||'en')==='en'?'var(--acc2)':'var(--bdr)'),color:(USER?.lang||'en')==='en'?'var(--acc2)':'var(--mut)',fontWeight:'700',cursor:'pointer'},onclick:async()=>{try{await api('POST','/update-profile',{lang:'en'});USER.lang='en';saveSession();render();}catch(e){alert(e.message);}}},'English'),
-      h('button',{style:{flex:1,padding:'14px',borderRadius:'12px',background:(USER?.lang||'en')==='he'?'rgba(59,130,246,.15)':'var(--card2)',border:'1px solid '+((USER?.lang||'en')==='he'?'var(--acc2)':'var(--bdr)'),color:(USER?.lang||'en')==='he'?'var(--acc2)':'var(--mut)',fontWeight:'700',cursor:'pointer'},onclick:async()=>{try{await api('POST','/update-profile',{lang:'he'});USER.lang='he';saveSession();render();}catch(e){alert(e.message);}}},'עברית'))));
+      h('button',{style:{flex:1,padding:'14px',borderRadius:'12px',background:(USER?.lang||'en')==='en'?'rgba(22,163,74,.15)':'var(--card2)',border:'1px solid '+((USER?.lang||'en')==='en'?'var(--acc2)':'var(--bdr)'),color:(USER?.lang||'en')==='en'?'var(--acc2)':'var(--mut)',fontWeight:'700',cursor:'pointer'},onclick:async()=>{try{await api('POST','/update-profile',{lang:'en'});USER.lang='en';saveSession();render();}catch(e){alert(e.message);}}},'English'),
+      h('button',{style:{flex:1,padding:'14px',borderRadius:'12px',background:(USER?.lang||'en')==='he'?'rgba(22,163,74,.15)':'var(--card2)',border:'1px solid '+((USER?.lang||'en')==='he'?'var(--acc2)':'var(--bdr)'),color:(USER?.lang||'en')==='he'?'var(--acc2)':'var(--mut)',fontWeight:'700',cursor:'pointer'},onclick:async()=>{try{await api('POST','/update-profile',{lang:'he'});USER.lang='he';saveSession();render();}catch(e){alert(e.message);}}},'עברית'))));
   // Theme
   c.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid var(--bdr)',marginBottom:'14px'},className:'fu'},
     h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'14px'}},t('theme')),
     h('div',{style:{display:'flex',gap:'8px'}},
-      h('button',{style:{flex:1,padding:'14px',borderRadius:'12px',background:THEME==='dark'?'rgba(245,158,11,.15)':'var(--card2)',border:'1px solid '+(THEME==='dark'?'var(--acc)':'var(--bdr)'),color:THEME==='dark'?'var(--acc)':'var(--mut)',fontWeight:'700',cursor:'pointer'},onclick:()=>{setTheme('dark');render();}},'🌙 '+t('dark')),
-      h('button',{style:{flex:1,padding:'14px',borderRadius:'12px',background:THEME==='light'?'rgba(245,158,11,.15)':'var(--card2)',border:'1px solid '+(THEME==='light'?'var(--acc)':'var(--bdr)'),color:THEME==='light'?'var(--acc)':'var(--mut)',fontWeight:'700',cursor:'pointer'},onclick:()=>{setTheme('light');render();}},'☀ '+t('light')))));
+      h('button',{style:{flex:1,padding:'14px',borderRadius:'12px',background:THEME==='dark'?'rgba(34,197,94,.15)':'var(--card2)',border:'1px solid '+(THEME==='dark'?'var(--acc)':'var(--bdr)'),color:THEME==='dark'?'var(--acc)':'var(--mut)',fontWeight:'700',cursor:'pointer'},onclick:()=>{setTheme('dark');render();}},'🌙 '+t('dark')),
+      h('button',{style:{flex:1,padding:'14px',borderRadius:'12px',background:THEME==='light'?'rgba(34,197,94,.15)':'var(--card2)',border:'1px solid '+(THEME==='light'?'var(--acc)':'var(--bdr)'),color:THEME==='light'?'var(--acc)':'var(--mut)',fontWeight:'700',cursor:'pointer'},onclick:()=>{setTheme('light');render();}},'☀ '+t('light')))));
   // Change password
   c.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid var(--bdr)',marginBottom:'14px'},className:'fu'},
     h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'14px'}},t('changePw')),
@@ -988,13 +993,13 @@ function renderSettings(c){
         box.appendChild(passwordField(t('currentPw'),oldP,function(e){oldP=e.target.value;}));
         box.appendChild(passwordField(t('newPw'),newP,function(e){newP=e.target.value;}));
         if(msg)box.appendChild(successBox(msg));
-        box.appendChild(h('button',{style:{width:'100%',padding:'12px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:async()=>{
+        box.appendChild(h('button',{style:{width:'100%',padding:'12px',borderRadius:'12px',background:'var(--acc)',color:'#fff',fontWeight:'700',cursor:'pointer'},onclick:async()=>{
           try{await api('POST','/change-password',{old_password:oldP,new_password:newP});msg=t('pwChanged');oldP='';newP='';dr();}catch(e){alert(e.message);}
         }},t('save')));}dr();return box;})()));
   // Tour + Onboarding
   c.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid var(--bdr)',marginBottom:'14px',display:'flex',gap:'8px'},className:'fu'},
-    h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'rgba(245,158,11,.12)',border:'1px solid rgba(245,158,11,.2)',color:'var(--acc)',fontWeight:'700',cursor:'pointer'},onclick:()=>showTour()},t('replayTour')),
-    h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'rgba(59,130,246,.12)',border:'1px solid rgba(59,130,246,.2)',color:'var(--acc2)',fontWeight:'700',cursor:'pointer'},onclick:()=>showOnboarding(true)},t('updateOnboarding'))));
+    h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'rgba(34,197,94,.12)',border:'1px solid rgba(34,197,94,.2)',color:'var(--acc)',fontWeight:'700',cursor:'pointer'},onclick:()=>showTour()},t('replayTour')),
+    h('button',{style:{flex:1,padding:'12px',borderRadius:'12px',background:'rgba(22,163,74,.12)',border:'1px solid rgba(22,163,74,.2)',color:'var(--acc2)',fontWeight:'700',cursor:'pointer'},onclick:()=>showOnboarding(true)},t('updateOnboarding'))));
   // Export
   c.appendChild(h('div',{style:{background:'var(--card)',borderRadius:'16px',padding:'20px',border:'1px solid var(--bdr)',marginBottom:'14px'},className:'fu'},
     h('div',{style:{fontSize:'15px',fontWeight:'700',marginBottom:'4px'}},t('exportData')),
@@ -1020,7 +1025,7 @@ function renderSettings(c){
           box.appendChild(h('div',{style:{display:'flex',gap:'8px',marginBottom:'12px'}},
             h('div',{style:{flex:1}},
               inputField(t('householdName'),'text',hhName,function(e){hhName=e.target.value;}),
-              h('button',{style:{width:'100%',padding:'10px',borderRadius:'10px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',fontSize:'13px',cursor:'pointer'},
+              h('button',{style:{width:'100%',padding:'10px',borderRadius:'10px',background:'var(--acc)',color:'#fff',fontWeight:'700',fontSize:'13px',cursor:'pointer'},
                 onclick:async()=>{if(!hhName)return;try{const r=await api('POST','/household/create',{name:hhName});alert(t('inviteCode')+': '+r.invite_code);render();}catch(e){alert(e.message);}}},t('createHousehold'))),
             h('div',{style:{flex:1}},
               inputField(t('inviteCode'),'text',joinCode,function(e){joinCode=e.target.value;}),
@@ -1047,10 +1052,10 @@ async function renderAdmin(app){
   const page=h('div',{style:{minHeight:'100vh',background:'var(--bg)',direction:dir}});
   page.appendChild(h('div',{style:{background:'var(--glass)',borderBottom:'1px solid var(--bdr)',padding:'calc(var(--st) + 10px) 16px 12px',display:'flex',alignItems:'center',justifyContent:'space-between',backdropFilter:'blur(16px)'}},
     h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},
-      h('div',{style:{width:'34px',height:'34px',borderRadius:'10px',background:'linear-gradient(135deg,var(--red),var(--acc))',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'14px',color:'#fff'}},'⚙'),
+      h('div',{style:{width:'34px',height:'34px',borderRadius:'10px',background:'var(--red)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'14px',color:'#fff'}},'⚙'),
       h('div',{},h('div',{style:{fontSize:'16px',fontWeight:'700'}},t('adminPanel')),h('div',{style:{fontSize:'10px',color:'var(--mut)'}},t('userMgmt')))),
     h('div',{style:{display:'flex',gap:'8px'}},
-      h('button',{style:{padding:'6px 12px',borderRadius:'8px',background:'rgba(245,158,11,.12)',border:'1px solid rgba(245,158,11,.2)',color:'var(--acc)',fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:()=>{VIEW='app';render();}},t('app')),
+      h('button',{style:{padding:'6px 12px',borderRadius:'8px',background:'rgba(34,197,94,.12)',border:'1px solid rgba(34,197,94,.2)',color:'var(--acc)',fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:()=>{VIEW='app';render();}},t('app')),
       h('button',{style:{padding:'6px 12px',borderRadius:'8px',background:'rgba(239,68,68,.12)',border:'1px solid rgba(239,68,68,.2)',color:'var(--red)',fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:()=>{clearSession();VIEW='login';render();}},t('signOut')))));
   const main=h('div',{style:{padding:'20px 16px calc(20px + var(--sb))',maxWidth:'700px',margin:'0 auto'},className:'fu'});
   // Global settings
@@ -1066,7 +1071,7 @@ async function renderAdmin(app){
       const kt=h('button',{className:'pw-toggle',onclick:()=>{const s=ki.type==='password';ki.type=s?'text':'password';kt.textContent=s?'🙈':'👁';}},'👁');
       kw.appendChild(ki);kw.appendChild(kt);sc.appendChild(kw);
       sc.appendChild(inputField(t('currency'),'text',cur,function(e){cur=e.target.value;}));
-      const sb=h('button',{style:{width:'100%',padding:'12px',borderRadius:'12px',background:'linear-gradient(135deg,var(--acc),var(--acc2))',color:'#fff',fontWeight:'700',cursor:'pointer'},
+      const sb=h('button',{style:{width:'100%',padding:'12px',borderRadius:'12px',background:'var(--acc)',color:'#fff',fontWeight:'700',cursor:'pointer'},
         onclick:async()=>{sb.textContent=t('savingSettings');try{await api('POST','/admin/settings',{global_ai_key:aiKey,currency:cur});sb.textContent=t('settingsSaved');setTimeout(()=>{sb.textContent=t('save');},2000);}catch(e){alert(e.message);sb.textContent=t('save');}}},t('save'));
       sc.appendChild(sb);
     }catch(e){sc.appendChild(errBox(e.message));}
@@ -1106,10 +1111,10 @@ async function renderAdmin(app){
         h('div',{},
           h('div',{style:{fontSize:'14px',fontWeight:'700',display:'flex',alignItems:'center',gap:'6px',flexWrap:'wrap'}},
             u.display_name||u.username,
-            h('span',{className:'alert-badge',style:{background:u.role==='master_admin'?'rgba(239,68,68,.15)':u.role==='admin'?'rgba(59,130,246,.15)':u.role==='moderator'?'rgba(245,158,11,.15)':'rgba(90,106,138,.15)',
+            h('span',{className:'alert-badge',style:{background:u.role==='master_admin'?'rgba(239,68,68,.15)':u.role==='admin'?'rgba(22,163,74,.15)':u.role==='moderator'?'rgba(34,197,94,.15)':'rgba(90,106,138,.15)',
               color:u.role==='master_admin'?'var(--red)':u.role==='admin'?'var(--acc2)':u.role==='moderator'?'var(--acc)':'var(--mut)'}},u.role)),
           h('div',{style:{fontSize:'11px',color:'var(--mut)',marginTop:'2px'}},'@'+u.username+' · '+u.created_at?.split('T')[0]+(u.last_login?' · Last: '+u.last_login.split('T')[0]:''))),
-        h('div',{style:{width:'10px',height:'10px',borderRadius:'99px',background:status==='pending'?'var(--acc)':status==='active'?'var(--grn)':'var(--red)'}})));
+        h('div',{style:{width:'10px',height:'10px',borderRadius:'8px',background:status==='pending'?'var(--acc)':status==='active'?'var(--grn)':'var(--red)'}})));
     if(!im){
       const actions=h('div',{style:{display:'flex',gap:'6px',flexWrap:'wrap'}});
       if(status==='pending')actions.appendChild(h('button',{style:{padding:'6px 14px',borderRadius:'8px',background:'var(--grn)',color:'#fff',fontWeight:'700',fontSize:'11px',cursor:'pointer'},onclick:async()=>{try{await api('POST','/admin/approve',{user_id:u.id});VIEW='admin';render();}catch(e){alert(e.message);}}},'✓ '+t('approve')));
