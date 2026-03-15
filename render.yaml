@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: financeiq
+    name: financiq
     runtime: python
     buildCommand: echo "No build needed"
     startCommand: python3 server.py
@@ -12,6 +12,6 @@ services:
       - key: ADMIN_PASS
         sync: false
     disk:
-      name: financeiq-data
+      name: financiq-data
       mountPath: /data
       sizeGB: 1

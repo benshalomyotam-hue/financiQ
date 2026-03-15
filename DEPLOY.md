@@ -1,4 +1,4 @@
-# FinanceIQ — Deployment Guide
+# financiQ — Deployment Guide
 
 ## Your files
 
@@ -28,10 +28,10 @@ Everything else (Dockerfile, Procfile, etc.) is for specific platforms.
 6. Add a **Disk** (for SQLite persistence):
    - Mount path: `/data`
    - Size: 1 GB
-   - Add env var: `DB_PATH` = `/data/financeiq.db`
+   - Add env var: `DB_PATH` = `/data/financiq.db`
 7. Click **Deploy**
 
-Your app will be live at `https://financeiq-xxxx.onrender.com`
+Your app will be live at `https://financiq-xxxx.onrender.com`
 
 ---
 
@@ -44,9 +44,9 @@ Your app will be live at `https://financeiq-xxxx.onrender.com`
 4. Add variables in the service settings:
    - `SECRET_KEY` = random long string
    - `ADMIN_PASS` = your admin password
-   - `DB_PATH` = `/data/financeiq.db`
+   - `DB_PATH` = `/data/financiq.db`
 5. Add a **Volume** mounted at `/data`
-6. Railway gives you a URL like `financeiq.up.railway.app`
+6. Railway gives you a URL like `financiq.up.railway.app`
 
 Optional: Add a custom domain in Settings → Networking.
 
@@ -66,7 +66,7 @@ fly launch
 # Say yes to defaults, choose a region close to you (e.g., fra for EU)
 
 # Create persistent storage
-fly volumes create financeiq_data --size 1 --region fra
+fly volumes create financiq_data --size 1 --region fra
 
 # Set secrets
 fly secrets set SECRET_KEY=$(openssl rand -hex 32)
@@ -76,7 +76,7 @@ fly secrets set ADMIN_PASS=YourStrongPassword
 fly deploy
 ```
 
-Your app: `https://financeiq.fly.dev`
+Your app: `https://financiq.fly.dev`
 
 ---
 
@@ -96,29 +96,29 @@ ssh root@YOUR_SERVER_IP
 apt update && apt install -y python3 caddy
 
 # Create app directory
-mkdir -p /opt/financeiq /data
-cd /opt/financeiq
+mkdir -p /opt/financiq /data
+cd /opt/financiq
 
 # Upload your files (from your local machine):
-# scp server.py app.html root@YOUR_SERVER_IP:/opt/financeiq/
+# scp server.py app.html root@YOUR_SERVER_IP:/opt/financiq/
 ```
 
 ### 3. Create a systemd service
 
 ```bash
-cat > /etc/systemd/system/financeiq.service << 'EOF'
+cat > /etc/systemd/system/financiq.service << 'EOF'
 [Unit]
-Description=FinanceIQ
+Description=financiQ
 After=network.target
 
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/opt/financeiq
+WorkingDirectory=/opt/financiq
 Environment=PORT=8080
 Environment=SECRET_KEY=CHANGE_THIS_TO_A_RANDOM_64_CHAR_HEX
 Environment=ADMIN_PASS=YourStrongAdminPassword
-Environment=DB_PATH=/data/financeiq.db
+Environment=DB_PATH=/data/financiq.db
 ExecStart=/usr/bin/python3 server.py
 Restart=always
 
@@ -126,8 +126,8 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
-systemctl enable financeiq
-systemctl start financeiq
+systemctl enable financiq
+systemctl start financiq
 ```
 
 ### 4. Set up HTTPS with Caddy (automatic SSL)
@@ -136,7 +136,7 @@ Point your domain's DNS A record to your server IP, then:
 
 ```bash
 cat > /etc/caddy/Caddyfile << 'EOF'
-financeiq.yourdomain.com {
+financiq.yourdomain.com {
     reverse_proxy localhost:8080
 }
 EOF
@@ -144,7 +144,7 @@ EOF
 systemctl restart caddy
 ```
 
-Done — your app is live at `https://financeiq.yourdomain.com` with automatic HTTPS.
+Done — your app is live at `https://financiq.yourdomain.com` with automatic HTTPS.
 
 ---
 
@@ -154,10 +154,10 @@ If you have a home server, NAS (Synology, etc.), or Raspberry Pi:
 
 ```bash
 # Copy files to the server
-scp server.py app.html user@server:/path/to/financeiq/
+scp server.py app.html user@server:/path/to/financiq/
 
 # SSH in and run
-cd /path/to/financeiq
+cd /path/to/financiq
 SECRET_KEY=$(openssl rand -hex 32) ADMIN_PASS=YourPass python3 server.py
 
 # Access from your network: http://SERVER_IP:8080
@@ -175,7 +175,7 @@ and use a free dynamic DNS service like [DuckDNS](https://www.duckdns.org/).
    - On Render: check the "Logs" tab
    - On Railway: check "Deployments → View Logs"
    - On Fly: `fly logs`
-   - On VPS: `journalctl -u financeiq`
+   - On VPS: `journalctl -u financiq`
 3. Add the TOTP secret to your authenticator app (Google Authenticator, Authy)
 4. Log in as `admin` with your ADMIN_PASS + 2FA code
 5. You're in the admin panel — start approving users!
@@ -188,9 +188,9 @@ All platforms support custom domains:
 
 1. Buy a domain (Namecheap, Cloudflare, Google Domains)
 2. Add a CNAME record pointing to your app URL
-   - Render: `financeiq-xxxx.onrender.com`
-   - Railway: `financeiq.up.railway.app`
-   - Fly: `financeiq.fly.dev`
+   - Render: `financiq-xxxx.onrender.com`
+   - Railway: `financiq.up.railway.app`
+   - Fly: `financiq.fly.dev`
 3. Add the custom domain in the platform settings
 4. HTTPS is automatic on all platforms
 
@@ -202,5 +202,5 @@ All platforms support custom domains:
 - [ ] Set a strong `ADMIN_PASS` (not the default!)
 - [ ] Use HTTPS (automatic on all platforms above)
 - [ ] Save your admin TOTP secret securely
-- [ ] Back up `/data/financeiq.db` regularly
+- [ ] Back up `/data/financiq.db` regularly
 - [ ] Consider rate limiting (add nginx/Caddy in front)

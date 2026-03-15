@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="FinanceIQ">
+<meta name="apple-mobile-web-app-title" content="financiQ">
 <meta name="theme-color" content="#080C16">
-<title>FinanceIQ</title>
+<title>financiQ</title>
 <link href="https://fonts.googleapis.com/css2?family=Alef:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px)}
@@ -25,7 +25,7 @@ input,button,textarea,select{font-family:'Alef',sans-serif;-webkit-appearance:no
 <div id="app"></div>
 <script>
 /* ═══════════════════════════════════════════════════════════════
-   FinanceIQ — Full Auth Frontend
+   financiQ — Full Auth Frontend
    Login → 2FA → App / Admin Panel
    ═══════════════════════════════════════════════════════════════ */
 
@@ -94,7 +94,7 @@ function authPage(app, content){
     h('div',{style:{width:'100%',maxWidth:'400px'},className:'fu'},
       h('div',{style:{textAlign:'center',marginBottom:'32px'}},
         h('div',{style:{width:'56px',height:'56px',borderRadius:'16px',background:'linear-gradient(135deg,'+T.acc+','+T.acc2+')',display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:'26px',fontWeight:'700',color:'#fff',marginBottom:'12px'}},'₪'),
-        h('div',{style:{fontSize:'24px',fontWeight:'700',letterSpacing:'-0.5px'}},'FinanceIQ'),
+        h('div',{style:{fontSize:'24px',fontWeight:'700',letterSpacing:'-0.5px'}},'financiQ'),
         h('div',{style:{fontSize:'13px',color:T.mut,marginTop:'4px'}},'Smart Money Management')
       ),
       content
@@ -190,7 +190,7 @@ function renderRegister(app){
         )
       : h('div',{style:{background:T.card,borderRadius:'20px',padding:'28px',border:'1px solid '+T.bdr}},
           h('div',{style:{fontSize:'18px',fontWeight:'700',marginBottom:'4px'}},'Create Account'),
-          h('div',{style:{fontSize:'12px',color:T.mut,marginBottom:'20px'}},'Sign up for FinanceIQ'),
+          h('div',{style:{fontSize:'12px',color:T.mut,marginBottom:'20px'}},'Sign up for financiQ'),
           errBox(ERR),
           inputField('Display name','text',displayName,function(e){displayName=e.target.value;}),
           inputField('Username (lowercase)','text',username,function(e){username=e.target.value;}),
@@ -300,7 +300,7 @@ function renderAppRedirect(app){
     h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},
       h('div',{style:{width:'34px',height:'34px',borderRadius:'10px',background:'linear-gradient(135deg,'+T.acc+','+T.acc2+')',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'16px',fontWeight:'700',color:'#fff'}},'₪'),
       h('div',{},
-        h('div',{style:{fontSize:'16px',fontWeight:'700'}},'FinanceIQ'),
+        h('div',{style:{fontSize:'16px',fontWeight:'700'}},'financiQ'),
         h('div',{style:{fontSize:'10px',color:T.mut}},'Welcome, '+(USER?.display_name||USER?.username||'User'))
       )
     ),
@@ -317,7 +317,7 @@ function renderAppRedirect(app){
     h('div',{style:{fontSize:'40px',marginBottom:'12px'}},'✓'),
     h('div',{style:{fontSize:'18px',fontWeight:'700',color:T.grn,marginBottom:'6px'}},'You\'re In!'),
     h('div',{style:{fontSize:'13px',color:T.mut,lineHeight:'1.6',maxWidth:'340px',margin:'0 auto'}},
-      'You are securely logged in with 2FA. Your financial data is protected. The full FinanceIQ dashboard, analytics, AI agent, and all features are available through this authenticated session.'
+      'You are securely logged in with 2FA. Your financial data is protected. The full financiQ dashboard, analytics, AI agent, and all features are available through this authenticated session.'
     )
   ));
 

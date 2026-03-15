@@ -1,4 +1,4 @@
-app = "financeiq"
+app = "financiq"
 primary_region = "fra"
 
 [build]
@@ -14,5 +14,5 @@ primary_region = "fra"
   auto_start_machines = true
 
 [mounts]
-  source = "financeiq_data"
+  source = "financiq_data"
   destination = "/data"

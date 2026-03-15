@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-FinanceIQ Server — Full-stack financial management with auth & 2FA
+financiQ Server — Full-stack financial management with auth & 2FA
 Pure Python stdlib: no Flask, no pip installs needed.
 """
 
@@ -24,7 +24,8 @@ from datetime import datetime, timedelta
 # ═══════════════════════════════════════════════════════════════
 HOST = "0.0.0.0"
 PORT = int(os.environ.get("PORT", 8080))
-DB_PATH = os.environ.get("DB_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "financeiq.db"))
+DB_PATH = os.environ.get("DB_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "financiq.db"))
+os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
 SECRET_KEY = os.environ.get("SECRET_KEY", secrets.token_hex(32))
 SESSION_HOURS = 24
 ADMIN_USER = "admin"
@@ -61,7 +62,7 @@ def verify_totp(secret, token, window=1):
             return True
     return False
 
-def get_totp_uri(secret, username, issuer="FinanceIQ"):
+def get_totp_uri(secret, username, issuer="financiQ"):
     """Generate otpauth:// URI for QR code / authenticator app."""
     return f"otpauth://totp/{issuer}:{username}?secret={secret}&issuer={issuer}&algorithm=SHA1&digits=6&period=30"
 
@@ -590,7 +591,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
 if __name__ == "__main__":
     init_db()
     server = http.server.HTTPServer((HOST, PORT), Handler)
-    print(f"\n  FinanceIQ Server running at http://localhost:{PORT}")
+    print(f"\n  financiQ Server running at http://localhost:{PORT}")
     print(f"  Open in any browser on any device on your network")
     print(f"  Admin: {ADMIN_USER} / {ADMIN_PASS}\n")
     try:

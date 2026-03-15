@@ -9,7 +9,7 @@ COPY server.py app.html ./
 RUN mkdir -p /data
 
 ENV PORT=8080
-ENV DB_PATH=/data/financeiq.db
+ENV DB_PATH=/data/financiq.db
 
 EXPOSE 8080
 
