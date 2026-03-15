@@ -115,7 +115,34 @@ changePw:'Change Password',currentPw:'Current password',newPw:'New password',pwC
 exportData:'Export Data',exportDesc:'Download all your transactions as CSV',exportBtn:'Download CSV',
 deleteAccount:'Delete Account',deleteDesc:'Request account deletion. Admin will review.',deleteReason:'Reason (optional)',deleteRequest:'Request Deletion',deletePending:'Deletion request pending',
 theme:'Theme',dark:'Dark',light:'Light',
-terms:'Terms & Privacy',termsTitle:'Terms of Service & Privacy Policy',termsText:'By using financiQ, you agree that your financial data is stored securely on our servers. We do not share your data with third parties. You can request account deletion at any time. Data is encrypted in transit via HTTPS.',acceptTerms:'I Accept',
+terms:'Terms & Privacy',termsTitle:'Privacy Policy & Data Consent',
+termsText:`financiQ takes your privacy seriously. Before using the app, please review how your data is handled:
+
+DATA WE COLLECT
+• Transaction details (date, amount, category, payment method)
+• Savings goals and budget limits
+• Credit/debit card names and last 4 digits
+• Your display name, language preference, and theme choice
+• Onboarding preferences (monthly expense goals)
+
+HOW DATA IS PROTECTED
+• Encrypted fields: Transaction descriptions, card names, goal names, and the AI API key are encrypted using HMAC-SHA256 stream cipher before storage. Even database administrators cannot read these fields without the encryption key.
+• Hashed fields: Your password is hashed with PBKDF2-SHA256 (100,000 iterations + random salt). It cannot be reversed or read by anyone, including administrators.
+• Plain fields: Amounts, categories, dates, and transaction types are stored unencrypted to enable financial analytics (dashboards, budgets, forecasts).
+• All data is transmitted over HTTPS (encrypted in transit).
+• Data is stored on Turso cloud database (EU region), encrypted at rest.
+
+AI FEATURES
+• When using the AI agent, your financial summary (amounts, categories, goals) is sent to the AI provider (Anthropic or OpenAI) to generate responses. Transaction descriptions are decrypted server-side before being sent to the AI.
+• AI conversations are not stored permanently.
+
+YOUR RIGHTS
+• You can export all your data as CSV at any time from Settings.
+• You can request full account deletion from Settings. An admin will process your request, and all your data will be permanently erased.
+• You can change your language, theme, and password at any time.
+
+By clicking "I Agree", you consent to this data handling policy.`,
+acceptTerms:'I Agree',declineTerms:'I Decline',
 onboardTitle:'Let\'s personalize your experience',onboardGoalQ:'What\'s your monthly expense goal?',onboardNeedQ:'What do you want from financiQ?',
 saveMoney:'Save money',monitorExpenses:'Monitor expenses',investBetter:'Invest better',reducePayments:'Reduce payments',budgetPlanning:'Budget planning',
 onboardDone:'Done!',onboardSkip:'Skip for now',
@@ -166,7 +193,34 @@ changePw:'שינוי סיסמה',currentPw:'סיסמה נוכחית',newPw:'סי
 exportData:'ייצוא נתונים',exportDesc:'הורד את כל התנועות כ-CSV',exportBtn:'הורד CSV',
 deleteAccount:'מחיקת חשבון',deleteDesc:'בקש מחיקת חשבון. המנהל יבדוק.',deleteReason:'סיבה (אופציונלי)',deleteRequest:'בקש מחיקה',deletePending:'בקשת מחיקה ממתינה',
 theme:'ערכת נושא',dark:'כהה',light:'בהיר',
-terms:'תנאים ופרטיות',termsTitle:'תנאי שימוש ומדיניות פרטיות',termsText:'בשימוש ב-financiQ, אתה מסכים שהנתונים הפיננסיים שלך מאוחסנים בצורה מאובטחת בשרתים שלנו. אנחנו לא משתפים מידע עם צדדים שלישיים. ניתן לבקש מחיקת חשבון בכל עת. הנתונים מוצפנים בהעברה באמצעות HTTPS.',acceptTerms:'אני מסכים',
+terms:'תנאים ופרטיות',termsTitle:'מדיניות פרטיות והסכמה לשימוש בנתונים',
+termsText:`financiQ מתייחס לפרטיות שלך ברצינות. לפני השימוש באפליקציה, אנא קרא כיצד הנתונים שלך מטופלים:
+
+נתונים שאנחנו אוספים
+• פרטי תנועות (תאריך, סכום, קטגוריה, אמצעי תשלום)
+• יעדי חיסכון ומגבלות תקציב
+• שמות כרטיסי אשראי/חיוב ו-4 ספרות אחרונות
+• שם התצוגה שלך, העדפת שפה וערכת נושא
+• העדפות אישיות (יעד הוצאות חודשי)
+
+כיצד הנתונים מוגנים
+• שדות מוצפנים: תיאורי תנועות, שמות כרטיסים, שמות יעדים ומפתח ה-AI מוצפנים באמצעות HMAC-SHA256 לפני האחסון. אפילו מנהלי מערכת לא יכולים לקרוא שדות אלה ללא מפתח ההצפנה.
+• שדות מגובבים: הסיסמה שלך מגובבת עם PBKDF2-SHA256 (100,000 חזרות + מלח אקראי). לא ניתן לשחזר או לקרוא אותה על ידי אף אחד, כולל מנהלים.
+• שדות גלויים: סכומים, קטגוריות, תאריכים וסוגי תנועות מאוחסנים ללא הצפנה כדי לאפשר ניתוח פיננסי (לוחות בקרה, תקציבים, תחזיות).
+• כל הנתונים מועברים באמצעות HTTPS (מוצפן בהעברה).
+• הנתונים מאוחסנים בענן Turso (אזור אירופה), מוצפנים במנוחה.
+
+תכונות AI
+• בעת שימוש בסוכן ה-AI, סיכום פיננסי (סכומים, קטגוריות, יעדים) נשלח לספק ה-AI (Anthropic או OpenAI) ליצירת תשובות. תיאורי תנועות מפוענחים בצד השרת לפני שליחתם ל-AI.
+• שיחות AI אינן נשמרות באופן קבוע.
+
+הזכויות שלך
+• ניתן לייצא את כל הנתונים שלך כ-CSV בכל עת מההגדרות.
+• ניתן לבקש מחיקה מלאה של החשבון מההגדרות. מנהל יטפל בבקשתך, וכל הנתונים שלך יימחקו לצמיתות.
+• ניתן לשנות שפה, ערכת נושא וסיסמה בכל עת.
+
+בלחיצה על "אני מסכים", אתה נותן הסכמתך למדיניות טיפול בנתונים זו.`,
+acceptTerms:'אני מסכים',declineTerms:'אני לא מסכים',
 onboardTitle:'בואו נתאים את החוויה שלך',onboardGoalQ:'מה יעד ההוצאות החודשי שלך?',onboardNeedQ:'מה אתה רוצה מ-financiQ?',
 saveMoney:'לחסוך כסף',monitorExpenses:'לעקוב אחרי הוצאות',investBetter:'להשקיע טוב יותר',reducePayments:'להפחית תשלומים',budgetPlanning:'תכנון תקציב',
 onboardDone:'!מוכן',onboardSkip:'דלג לעת עתה',
@@ -427,12 +481,28 @@ function renderRegister(app){
 
 // ═══════════════════════════ TERMS ═══════════════════════════
 function showTerms(){
-  const overlay=h('div',{className:'modal-overlay'},
-    h('div',{className:'modal-card',style:{direction:isRTL()?'rtl':'ltr',maxHeight:'80vh',overflowY:'auto'}},
-      h('div',{style:{fontSize:'20px',fontWeight:'700',marginBottom:'12px'}},t('termsTitle')),
-      h('div',{style:{fontSize:'13px',color:'var(--mut)',lineHeight:'1.8',marginBottom:'24px',whiteSpace:'pre-wrap'}},t('termsText')),
-      h('button',{style:{width:'100%',padding:'14px',borderRadius:'12px',background:'var(--acc)',color:'#fff',fontWeight:'700',cursor:'pointer'},
-        onclick:async()=>{try{await api('POST','/accept-terms');USER.terms_accepted=1;saveSession();overlay.remove();if(!USER.onboarding_done)showOnboarding();else if(!USER.tour_completed)showTour();}catch(e){showToast(e.message,'error');}}},t('acceptTerms'))));
+  const overlay=h('div',{className:'modal-overlay',style:{zIndex:10001}},
+    h('div',{className:'modal-card',style:{direction:isRTL()?'rtl':'ltr',maxHeight:'85vh',overflowY:'auto',maxWidth:'500px',padding:'28px'}},
+      // Header with icon
+      h('div',{style:{textAlign:'center',marginBottom:'20px'}},
+        h('div',{style:{width:'48px',height:'48px',borderRadius:'12px',background:'var(--acc)',display:'inline-flex',alignItems:'center',justifyContent:'center',marginBottom:'10px'},innerHTML:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'}),
+        h('div',{style:{fontSize:'18px',fontWeight:'700'}},t('termsTitle'))),
+      // Privacy text with styled sections
+      h('div',{style:{fontSize:'12px',color:'var(--mut)',lineHeight:'1.8',marginBottom:'24px',whiteSpace:'pre-wrap',background:'var(--card2)',padding:'16px',borderRadius:'12px',border:'1px solid var(--bdr)',maxHeight:'45vh',overflowY:'auto'}},t('termsText')),
+      // Buttons
+      h('div',{style:{display:'flex',gap:'10px'}},
+        h('button',{style:{flex:1,padding:'14px',borderRadius:'12px',background:'var(--card2)',border:'1px solid var(--bdr)',color:'var(--red)',fontWeight:'700',fontSize:'14px',cursor:'pointer'},
+          onclick:()=>{
+            clearSession();VIEW='login';
+            ERR=USER?.lang==='he'?'יש לקבל את מדיניות הפרטיות כדי להשתמש באפליקציה':'You must accept the privacy policy to use the app';
+            overlay.remove();render();
+          }},t('declineTerms')),
+        h('button',{style:{flex:1,padding:'14px',borderRadius:'12px',background:'var(--acc)',color:'#fff',fontWeight:'700',fontSize:'14px',cursor:'pointer'},
+          onclick:async()=>{
+            try{await api('POST','/accept-terms');USER.terms_accepted=1;saveSession();overlay.remove();
+              if(!USER.onboarding_done)showOnboarding();else if(!USER.tour_completed)showTour();
+            }catch(e){showToast(e.message,'error');}
+          }},t('acceptTerms')))));
   document.body.appendChild(overlay);
 }
 

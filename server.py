@@ -16,9 +16,68 @@ SECRET_KEY = os.environ.get("SECRET_KEY", secrets.token_hex(32))
 SESSION_HOURS = 24
 ADMIN_USER = "admin"
 ADMIN_PASS = os.environ.get("ADMIN_PASS", "Admin123!")
+ENCRYPTION_KEY = os.environ.get("ENCRYPTION_KEY", SECRET_KEY)
 LOGIN_ATTEMPTS = {}  # {ip: [(timestamp, count)]}
 MAX_ATTEMPTS = 5
 ATTEMPT_WINDOW = 300  # 5 minutes
+
+# ═══════════════ Field Encryption (pure stdlib) ═══════════════
+def _derive_key(purpose=""):
+    return hashlib.sha256((ENCRYPTION_KEY + purpose).encode()).digest()
+
+def encrypt_field(plaintext):
+    """Encrypt a string. Returns base64 'iv+ciphertext+mac'."""
+    if not plaintext: return ""
+    key = _derive_key("field")
+    iv = secrets.token_bytes(16)
+    pt = plaintext.encode('utf-8')
+    stream = b""
+    for i in range(0, len(pt), 32):
+        stream += hmac.new(key, iv + i.to_bytes(4, 'big'), hashlib.sha256).digest()
+    ct = bytes(a ^ b for a, b in zip(pt, stream[:len(pt)]))
+    mac = hmac.new(key, iv + ct, hashlib.sha256).digest()[:16]
+    return base64.b64encode(iv + ct + mac).decode()
+
+def decrypt_field(encrypted):
+    """Decrypt a field. Returns plaintext, or original string if not encrypted."""
+    if not encrypted: return ""
+    try:
+        raw = base64.b64decode(encrypted)
+        if len(raw) < 33: return encrypted
+        key = _derive_key("field")
+        iv, mac, ct = raw[:16], raw[-16:], raw[16:-16]
+        if not hmac.compare_digest(mac, hmac.new(key, iv + ct, hashlib.sha256).digest()[:16]):
+            return encrypted  # Not encrypted or wrong key — return as-is
+        stream = b""
+        for i in range(0, len(ct), 32):
+            stream += hmac.new(key, iv + i.to_bytes(4, 'big'), hashlib.sha256).digest()
+        return bytes(a ^ b for a, b in zip(ct, stream[:len(ct)])).decode('utf-8')
+    except: return encrypted  # Legacy plaintext data
+
+def decrypt_tx(row):
+    """Decrypt sensitive fields in a transaction row dict"""
+    d = dict(row)
+    for k in ('description','card_name','recurring_label'):
+        if k in d and d[k]: d[k] = decrypt_field(d[k])
+    return d
+
+def decrypt_goal(row):
+    d = dict(row)
+    if 'name' in d and d['name']: d['name'] = decrypt_field(d['name'])
+    return d
+
+def decrypt_card(row):
+    d = dict(row)
+    if 'name' in d and d['name']: d['name'] = decrypt_field(d['name'])
+    return d
+
+def get_ai_key():
+    """Get decrypted AI API key from settings"""
+    conn = get_db()
+    row = conn.execute("SELECT value FROM settings WHERE key='global_ai_key'").fetchone()
+    conn.close()
+    if not row: return ""
+    return decrypt_field(row["value"])
 
 def hash_password(pw, salt=None):
     if not salt: salt = secrets.token_hex(16)
@@ -324,16 +383,24 @@ class Handler(http.server.BaseHTTPRequestHandler):
             params = urllib.parse.parse_qs(qs)
             query = "SELECT * FROM transactions WHERE user_id=?"
             args = [u["id"]]
-            if "card" in params: query += " AND card_name=?"; args.append(params["card"][0])
-            if "search" in params: query += " AND (description LIKE ? OR category LIKE ?)"; s = f"%{params['search'][0]}%"; args += [s, s]
+            search_term = params.get("search",[""])[0].lower() if "search" in params else ""
+            # Note: can't LIKE search on encrypted descriptions, so we filter after decrypt
             if "from" in params: query += " AND date>=?"; args.append(params["from"][0])
             if "to" in params: query += " AND date<=?"; args.append(params["to"][0])
             if "type" in params: query += " AND type=?"; args.append(params["type"][0])
             if "recurring" in params: query += " AND is_recurring=1"
             query += " ORDER BY date DESC"
-            if "limit" in params: query += " LIMIT ?"; args.append(int(params["limit"][0]))
             rows = conn.execute(query, args).fetchall(); conn.close()
-            return self.send_json([dict(r) for r in rows])
+            results = [decrypt_tx(r) for r in rows]
+            # Post-decrypt search filter
+            if search_term:
+                results = [r for r in results if search_term in r.get("description","").lower() or search_term in r.get("category","").lower() or search_term in r.get("card_name","").lower()]
+            # Post-decrypt card filter
+            if "card" in params:
+                card_filter = params["card"][0]
+                results = [r for r in results if r.get("card_name","") == card_filter]
+            if "limit" in params: results = results[:int(params["limit"][0])]
+            return self.send_json(results)
 
         elif path == "/api/budgets":
             u = self.get_user()
@@ -345,13 +412,13 @@ class Handler(http.server.BaseHTTPRequestHandler):
             u = self.get_user()
             if not u: return self.send_json({"error":"Unauthorized"},401)
             conn = get_db(); rows = conn.execute("SELECT * FROM goals WHERE user_id=?",(u["id"],)).fetchall(); conn.close()
-            return self.send_json([dict(r) for r in rows])
+            return self.send_json([decrypt_goal(r) for r in rows])
 
         elif path == "/api/cards":
             u = self.get_user()
             if not u: return self.send_json({"error":"Unauthorized"},401)
             conn = get_db(); rows = conn.execute("SELECT * FROM cards WHERE user_id=?",(u["id"],)).fetchall(); conn.close()
-            return self.send_json([dict(r) for r in rows])
+            return self.send_json([decrypt_card(r) for r in rows])
 
         elif path == "/api/settings":
             conn = get_db(); rows = conn.execute("SELECT key,value FROM settings").fetchall(); conn.close()
@@ -389,16 +456,16 @@ class Handler(http.server.BaseHTTPRequestHandler):
             for tx in all_tx: cat_amounts[tx["category"]].append(tx["amount"])
             for tx in conn.execute("SELECT * FROM transactions WHERE user_id=? AND type='expense' AND date>=? AND date<? ORDER BY amount DESC",(u["id"],ms,me)).fetchall():
                 avg = sum(cat_amounts[tx["category"]]) / max(len(cat_amounts[tx["category"]]),1)
-                if tx["amount"] > avg * 2.5 and tx["amount"] > 50: anomalies.append(dict(tx) | {"avg":round(avg)})
+                if tx["amount"] > avg * 2.5 and tx["amount"] > 50: anomalies.append(decrypt_tx(tx) | {"avg":round(avg)})
             # Duplicate detection: same amount+description within 3 days
             dupes = []
-            recent = conn.execute("SELECT * FROM transactions WHERE user_id=? AND date>=? AND date<? ORDER BY date",(u["id"],ms,me)).fetchall()
+            recent = [decrypt_tx(r) for r in conn.execute("SELECT * FROM transactions WHERE user_id=? AND date>=? AND date<? ORDER BY date",(u["id"],ms,me)).fetchall()]
             for i, a in enumerate(recent):
                 for b in recent[i+1:]:
                     if a["description"]==b["description"] and a["amount"]==b["amount"] and a["id"]!=b["id"]:
                         try:
                             da, db = datetime.strptime(a["date"],"%Y-%m-%d"), datetime.strptime(b["date"],"%Y-%m-%d")
-                            if abs((da-db).days) <= 3: dupes.append({"tx1":dict(a),"tx2":dict(b)})
+                            if abs((da-db).days) <= 3: dupes.append({"tx1":a,"tx2":b})
                         except: pass
             onboarding = json.loads(u.get("onboarding_data","{}")) if u.get("onboarding_data") else {}
             # Month-over-month: last month's totals
@@ -438,9 +505,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 "month_expenses":exp["t"],"month_income":inc["t"],"total_transactions":tc["c"],
                 "month":now.strftime("%Y-%m"),
                 "categories":[{"category":c["category"],"total":c["total"]} for c in cats],
-                "goals":[dict(g) for g in goals],
-                "cards_spend":[dict(c) for c in cards_spend],
-                "recurring":[dict(r) for r in recurring[:10]],
+                "goals":[decrypt_goal(g) for g in goals],
+                "cards_spend":[{"card_name":decrypt_field(dict(c)["card_name"]),"total":c["total"],"cnt":c["cnt"]} for c in cards_spend],
+                "recurring":[decrypt_tx(r) for r in recurring[:10]],
                 "budget_alerts":alerts, "anomalies":anomalies[:5], "duplicates":dupes[:5],
                 "monthly_goal":onboarding.get("monthly_expense_goal",0),
                 "prev_month_expenses":prev_exp["t"],"prev_month_income":prev_inc["t"],
@@ -457,7 +524,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             conn.close()
             lines = ["date,description,amount,category,method,type,card,recurring"]
             for t in txns:
-                d = dict(t)
+                d = decrypt_tx(t)
                 lines.append(",".join([str(d.get(k,"")).replace(",",";") for k in ["date","description","amount","category","method","type","card_name","is_recurring"]]))
             csv_text = "\n".join(lines)
             body = csv_text.encode("utf-8-sig")
@@ -478,7 +545,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
             u = self.get_user()
             if not self.is_admin(u): return self.send_json({"error":"Forbidden"},403)
             conn = get_db(); rows = conn.execute("SELECT key,value FROM settings").fetchall(); conn.close()
-            return self.send_json({r["key"]:r["value"] for r in rows})
+            result = {r["key"]:r["value"] for r in rows}
+            if "global_ai_key" in result and result["global_ai_key"]:
+                result["global_ai_key"] = decrypt_field(result["global_ai_key"])
+            return self.send_json(result)
 
         elif path == "/api/admin/deletion-requests":
             u = self.get_user()
@@ -586,9 +656,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
             conn = get_db()
             for tx in txns:
                 conn.execute("INSERT INTO transactions (user_id,date,description,amount,category,method,type,card_name,is_recurring,recurring_label) VALUES (?,?,?,?,?,?,?,?,?,?)",
-                    (u["id"],tx.get("date",""),tx.get("description",""),tx.get("amount",0),
+                    (u["id"],tx.get("date",""),encrypt_field(tx.get("description","")),tx.get("amount",0),
                      tx.get("category","Other"),tx.get("method","Unknown"),tx.get("type","expense"),
-                     tx.get("card_name",""),1 if tx.get("is_recurring") else 0,tx.get("recurring_label","")))
+                     encrypt_field(tx.get("card_name","")),1 if tx.get("is_recurring") else 0,encrypt_field(tx.get("recurring_label",""))))
             conn.commit(); conn.close()
             return self.send_json({"ok":True,"count":len(txns)})
 
@@ -606,7 +676,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             if not u: return self.send_json({"error":"Unauthorized"},401)
             conn = get_db()
             cur = conn.execute("INSERT INTO goals (user_id,name,icon,target,saved,color) VALUES (?,?,?,?,?,?)",
-                (u["id"],body.get("name",""),body.get("icon","🎯"),body.get("target",0),body.get("saved",0),body.get("color","#10B981")))
+                (u["id"],encrypt_field(body.get("name","")),body.get("icon","🎯"),body.get("target",0),body.get("saved",0),body.get("color","#10B981")))
             conn.commit(); gid=cur.lastrowid; conn.close()
             return self.send_json({"ok":True,"id":gid})
 
@@ -615,7 +685,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             if not u: return self.send_json({"error":"Unauthorized"},401)
             conn = get_db()
             cur = conn.execute("INSERT INTO cards (user_id,name,last_four,color,card_type) VALUES (?,?,?,?,?)",
-                (u["id"],body.get("name",""),body.get("last_four",""),body.get("color","#3B82F6"),body.get("card_type","credit")))
+                (u["id"],encrypt_field(body.get("name","")),body.get("last_four",""),body.get("color","#3B82F6"),body.get("card_type","credit")))
             conn.commit(); cid=cur.lastrowid; conn.close()
             return self.send_json({"ok":True,"id":cid})
 
@@ -672,8 +742,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             u = self.get_user()
             if not u: return self.send_json({"error":"Unauthorized"},401)
             conn = get_db()
-            key_row = conn.execute("SELECT value FROM settings WHERE key='global_ai_key'").fetchone()
-            ai_key = key_row["value"] if key_row else ""
+            ai_key = get_ai_key()
             if not ai_key: conn.close(); return self.send_json({"error":"AI not configured"},400)
             now = datetime.now(); ms=now.strftime("%Y-%m-01"); me=(now.replace(day=28)+timedelta(days=4)).replace(day=1).strftime("%Y-%m-%d")
             exp_t = conn.execute("SELECT COALESCE(SUM(amount),0) as t FROM transactions WHERE user_id=? AND type='expense' AND date>=? AND date<?",(u["id"],ms,me)).fetchone()
@@ -715,10 +784,7 @@ Respond in {'Hebrew' if lang=='he' else 'English'}. Return ONLY a JSON array of 
             if not u: return self.send_json({"error":"Unauthorized"},401)
             image_data = body.get("image","")  # base64 encoded image
             if not image_data: return self.send_json({"error":"No image provided"},400)
-            conn = get_db()
-            key_row = conn.execute("SELECT value FROM settings WHERE key='global_ai_key'").fetchone()
-            conn.close()
-            ai_key = key_row["value"] if key_row else ""
+            ai_key = get_ai_key()
             if not ai_key: return self.send_json({"error":"AI not configured"},400)
             lang = u.get("lang","en")
             prompt = f"""Extract transaction data from this receipt image. Return ONLY a JSON object with these fields:
@@ -840,7 +906,9 @@ If you can't read the receipt, return {{"error":"Cannot read receipt"}}. Respond
             u = self.get_user()
             if not self.is_admin(u): return self.send_json({"error":"Forbidden"},403)
             conn = get_db()
-            for k,v in body.items(): conn.execute("INSERT OR REPLACE INTO settings (key,value) VALUES (?,?)",(k,str(v)))
+            for k,v in body.items():
+                val = encrypt_field(str(v)) if k == "global_ai_key" and v else str(v)
+                conn.execute("INSERT OR REPLACE INTO settings (key,value) VALUES (?,?)",(k,val))
             conn.commit(); conn.close(); return self.send_json({"ok":True})
 
         elif path == "/api/ai-chat":
@@ -850,7 +918,7 @@ If you can't read the receipt, return {{"error":"Cannot read receipt"}}. Respond
             history = body.get("history",[])
             if not message: return self.send_json({"error":"Message required"},400)
             conn = get_db()
-            key_row = conn.execute("SELECT value FROM settings WHERE key='global_ai_key'").fetchone()
+            ai_key = get_ai_key()
             now = datetime.now(); ms=now.strftime("%Y-%m-01"); me=(now.replace(day=28)+timedelta(days=4)).replace(day=1).strftime("%Y-%m-%d")
             txns = conn.execute("SELECT date,description,amount,category,type,card_name FROM transactions WHERE user_id=? ORDER BY date DESC LIMIT 40",(u["id"],)).fetchall()
             exp_t = conn.execute("SELECT COALESCE(SUM(amount),0) as t FROM transactions WHERE user_id=? AND type='expense' AND date>=? AND date<?",(u["id"],ms,me)).fetchone()
@@ -860,12 +928,11 @@ If you can't read the receipt, return {{"error":"Cannot read receipt"}}. Respond
             budgets_d = conn.execute("SELECT category,amount FROM budgets WHERE user_id=?",(u["id"],)).fetchall()
             onboarding = json.loads(u.get("onboarding_data","{}") or "{}")
             conn.close()
-            ai_key = key_row["value"] if key_row else ""
             if not ai_key: return self.send_json({"error":"AI API key not configured. Ask admin."},400)
             lang = u.get("lang","en")
-            tx_lines = "\n".join([f"  {dict(r)['date']}|{dict(r)['description']}|{dict(r)['amount']}|{dict(r)['category']}|{dict(r)['type']}|{dict(r)['card_name']}" for r in txns[:30]])
+            tx_lines = "\n".join([f"  {decrypt_field(dict(r)['description'])}|{dict(r)['amount']}|{dict(r)['category']}|{dict(r)['type']}" for r in txns[:30]])
             cat_lines = "\n".join([f"  {dict(c)['category']}:{dict(c)['total']:.0f}" for c in cats])
-            goal_lines = "\n".join([f"  {dict(g)['name']}:{dict(g)['saved']:.0f}/{dict(g)['target']:.0f}" for g in goals_d])
+            goal_lines = "\n".join([f"  {decrypt_field(dict(g)['name'])}:{dict(g)['saved']:.0f}/{dict(g)['target']:.0f}" for g in goals_d])
             budget_lines = "\n".join([f"  {dict(b)['category']}:{dict(b)['amount']:.0f}" for b in budgets_d])
             user_goals_text = ""
             if onboarding:
@@ -908,8 +975,8 @@ Transactions:\n{tx_lines or 'None'}"""
                         tx_data = json.loads(tx_match.group(1))
                         conn2 = get_db()
                         conn2.execute("INSERT INTO transactions (user_id,date,description,amount,category,method,type) VALUES (?,?,?,?,?,?,?)",
-                            (u["id"], tx_data.get("date",""), tx_data.get("description",""), tx_data.get("amount",0),
-                             tx_data.get("category","Other"), "AI Agent", tx_data.get("type","expense")))
+                            (u["id"], tx_data.get("date",""), encrypt_field(tx_data.get("description","")), tx_data.get("amount",0),
+                             tx_data.get("category","Other"), encrypt_field("AI Agent"), tx_data.get("type","expense")))
                         conn2.commit(); conn2.close()
                         added_tx = tx_data
                         # Clean the command from the visible reply
@@ -939,9 +1006,9 @@ Transactions:\n{tx_lines or 'None'}"""
             if not u: return self.send_json({"error":"Unauthorized"},401)
             body = self.read_body(); conn = get_db()
             conn.execute("UPDATE transactions SET date=?,description=?,amount=?,category=?,method=?,type=?,card_name=?,is_recurring=?,recurring_label=? WHERE id=? AND user_id=?",
-                (body.get("date",""),body.get("description",""),body.get("amount",0),body.get("category","Other"),
-                 body.get("method","Unknown"),body.get("type","expense"),body.get("card_name",""),
-                 1 if body.get("is_recurring") else 0,body.get("recurring_label",""),int(m2.group(1)),u["id"]))
+                (body.get("date",""),encrypt_field(body.get("description","")),body.get("amount",0),body.get("category","Other"),
+                 body.get("method","Unknown"),body.get("type","expense"),encrypt_field(body.get("card_name","")),
+                 1 if body.get("is_recurring") else 0,encrypt_field(body.get("recurring_label","")),int(m2.group(1)),u["id"]))
             conn.commit(); conn.close(); return self.send_json({"ok":True})
         self.send_json({"error":"Not found"},404)
 
