@@ -24,8 +24,13 @@ from datetime import datetime, timedelta
 # ═══════════════════════════════════════════════════════════════
 HOST = "0.0.0.0"
 PORT = int(os.environ.get("PORT", 8080))
-DB_PATH = os.environ.get("DB_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "financiq.db"))
-os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
+_default_db = os.path.join(os.path.dirname(os.path.abspath(__file__)), "financiq.db")
+DB_PATH = os.environ.get("DB_PATH", _default_db)
+try:
+    os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
+except PermissionError:
+    DB_PATH = _default_db
+    os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
 SECRET_KEY = os.environ.get("SECRET_KEY", secrets.token_hex(32))
 SESSION_HOURS = 24
 ADMIN_USER = "admin"
