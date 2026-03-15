@@ -242,7 +242,7 @@ function authPage(app,content){
   app.appendChild(h('div',{style:{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',padding:'20px',background:'var(--bg)'}},
     h('div',{style:{width:'100%',maxWidth:'400px'},className:'fu'},
       h('div',{style:{textAlign:'center',marginBottom:'32px'}},
-        h('div',{style:{width:'56px',height:'56px',borderRadius:'14px',background:'var(--acc)',display:'inline-flex',alignItems:'center',justifyContent:'center',marginBottom:'12px',overflow:'hidden'},innerHTML:'<svg width="38" height="38" viewBox="0 0 28 28" fill="none"><text x="2" y="20" font-family="Arial,sans-serif" font-weight="900" font-size="13" fill="#fff" letter-spacing="-1">FiQ</text></svg>'}),
+        h('div',{style:{width:'56px',height:'56px',borderRadius:'14px',background:'var(--acc)',display:'inline-flex',alignItems:'center',justifyContent:'center',marginBottom:'12px',overflow:'hidden'},innerHTML:'<svg width="38" height="38" viewBox="0 0 28 28" fill="none"><text x="14" y="20" font-family="Arial,sans-serif" font-weight="900" font-size="13" fill="#fff" letter-spacing="-1" text-anchor="middle" direction="ltr">FiQ</text></svg>'}),
         h('div',{style:{fontSize:'24px',fontWeight:'700',letterSpacing:'-0.5px'}},'financiQ'),
         h('div',{style:{fontSize:'13px',color:'var(--mut)',marginTop:'4px'}},t('tagline'))),content)));
 }
@@ -400,7 +400,7 @@ function renderApp(app){
   // Desktop Sidebar
   const sb=h('div',{className:'desktop-sidebar',style:{position:'fixed',top:0,[isRTL()?'right':'left']:0,bottom:0,width:'240px',background:'var(--card)',[isRTL()?'borderLeft':'borderRight']:'1px solid var(--bdr)',padding:'24px 16px',display:'flex',flexDirection:'column',zIndex:100}});
   sb.appendChild(h('div',{style:{display:'flex',alignItems:'center',gap:'12px',marginBottom:'28px',padding:'0 8px'}},
-    h('div',{style:{width:'40px',height:'40px',borderRadius:'10px',background:'var(--acc)',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'},innerHTML:'<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><text x="2" y="20" font-family="Arial,sans-serif" font-weight="900" font-size="13" fill="#fff" letter-spacing="-1">FiQ</text></svg>'}),
+    h('div',{style:{width:'40px',height:'40px',borderRadius:'10px',background:'var(--acc)',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'},innerHTML:'<svg width="28" height="28" viewBox="0 0 28 28" fill="none"><text x="14" y="20" font-family="Arial,sans-serif" font-weight="900" font-size="13" fill="#fff" letter-spacing="-1" text-anchor="middle" direction="ltr">FiQ</text></svg>'}),
     h('div',{},h('div',{style:{fontSize:'17px',fontWeight:'700',letterSpacing:'-0.3px'}},'financiQ'),h('div',{style:{fontSize:'10px',color:'var(--mut)'}},t('tagline')))));
   navItems.forEach(n=>{
     const active=APP_TAB===n.id;
@@ -435,7 +435,7 @@ function renderApp(app){
   // Mobile Header
   wrapper.appendChild(h('div',{className:'mobile-nav',style:{position:'sticky',top:0,zIndex:100,background:'var(--glass)',borderBottom:'1px solid var(--bdr)',padding:'calc(var(--st) + 8px) 16px 8px',display:'flex',alignItems:'center',justifyContent:'space-between',backdropFilter:'blur(16px)'}},
     h('div',{style:{display:'flex',alignItems:'center',gap:'10px'}},
-      h('div',{style:{width:'32px',height:'32px',borderRadius:'8px',background:'var(--acc)',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'},innerHTML:'<svg width="22" height="22" viewBox="0 0 28 28" fill="none"><text x="2" y="20" font-family="Arial,sans-serif" font-weight="900" font-size="13" fill="#fff" letter-spacing="-1">FiQ</text></svg>'}),
+      h('div',{style:{width:'32px',height:'32px',borderRadius:'8px',background:'var(--acc)',display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'},innerHTML:'<svg width="22" height="22" viewBox="0 0 28 28" fill="none"><text x="14" y="20" font-family="Arial,sans-serif" font-weight="900" font-size="13" fill="#fff" letter-spacing="-1" text-anchor="middle" direction="ltr">FiQ</text></svg>'}),
       h('div',{style:{fontSize:'16px',fontWeight:'700'}},'financiQ')),
     h('button',{style:{padding:'6px 12px',borderRadius:'8px',background:'rgba(239,68,68,.1)',border:'1px solid rgba(239,68,68,.2)',color:'var(--red)',fontSize:'11px',fontWeight:'700',cursor:'pointer'},onclick:()=>{clearSession();VIEW='login';render();}},t('signOut'))));
   // Main content
